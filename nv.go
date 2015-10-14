@@ -32,7 +32,7 @@ import (
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("nv .env command [args]")
+		printUsage()
 		return
 	}
 	fn := os.Args[1]
@@ -50,6 +50,12 @@ func main() {
 	if execErr != nil {
 		fmt.Println("[Err] Cannot execute:", binary)
 	}
+}
+
+func printUsage() {
+	usage := `nv - context specific environment variables
+Usage: nv <env file> <command> [arguments...]`
+	fmt.Println(usage)
 }
 
 func loadEnvFile(fn string) []string {
