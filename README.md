@@ -2,6 +2,14 @@
 
 nv is a lightweight utility to load context specific environment variables from a `.env` file before executing a command or command line program.
 
+## Install
+
+```
+$ brew update
+$ brew tap jcouture/nv
+$ brew install nv
+```
+
 ## Build the Source
 
 ```
