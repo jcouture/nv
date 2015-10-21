@@ -45,11 +45,6 @@ func main() {
 		os.Exit(-1)
 	}
 
-	if !fileReadable(fn) {
-		fmt.Printf("[Err] '%s': Permission denied\n", fn)
-		os.Exit(-1)
-	}
-
 	setEnvVars(loadEnvFile(fn))
 
 	binary, lookErr := exec.LookPath(cmd)
@@ -73,7 +68,8 @@ Usage: nv <env file> <command> [arguments...]`
 func loadEnvFile(fn string) []string {
 	dat, err := ioutil.ReadFile(fn)
 	if err != nil {
-		panic(err)
+		fmt.Printf("[Err] '%s': Permission denied\n", fn)
+		os.Exit(-1)
 	}
 	vars := make([]string, 0)
 	lines := bytes.Split(dat, []byte("\n"))
@@ -98,13 +94,6 @@ func setEnvVars(envVars []string) {
 
 func fileExists(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-func fileReadable(filename string) bool {
-	if _, err := os.Stat(filename); err == nil {
 		return false
 	}
 	return true
