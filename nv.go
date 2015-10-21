@@ -33,11 +33,22 @@ import (
 func main() {
 	if len(os.Args) < 3 {
 		printUsage()
-		return
+		os.Exit(-1)
 	}
+
 	fn := os.Args[1]
 	cmd := os.Args[2]
 	args := os.Args[2:]
+
+	if !fileExists(fn) {
+		fmt.Printf("[Err] '%s': No such file or directory\n", fn)
+		os.Exit(-1)
+	}
+
+	if !fileReadable(fn) {
+		fmt.Printf("[Err] '%s': Permission denied\n", fn)
+		os.Exit(-1)
+	}
 
 	setEnvVars(loadEnvFile(fn))
 
@@ -49,6 +60,7 @@ func main() {
 	execErr := syscall.Exec(binary, args, os.Environ())
 	if execErr != nil {
 		fmt.Println("[Err] Cannot execute:", binary)
+		os.Exit(-1)
 	}
 }
 
@@ -82,4 +94,18 @@ func setEnvVars(envVars []string) {
 			os.Setenv(name, value)
 		}
 	}
+}
+
+func fileExists(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func fileReadable(filename string) bool {
+	if _, err := os.Stat(filename); err == nil {
+		return false
+	}
+	return true
 }
