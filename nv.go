@@ -80,7 +80,9 @@ func parseInput(input string) []string {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if len(line) > 0 { //ignore empty lines
-			lines = append(lines, string(line))
+			if !strings.HasPrefix(line, "#") { //ignore comments
+				lines = append(lines, string(line))
+			}
 		}
 	}
 	return lines

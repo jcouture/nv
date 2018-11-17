@@ -25,6 +25,8 @@ import "testing"
 func TestParseInput(t *testing.T) {
 	input := `PORT=4200
 	SECRET_KEY=1234567
+
+	# This is comment
 	DATABASE_URL=postgres://simonprev:@localhost:5432/accent_playground_dev?pool=10
 	`
 	lines := parseInput(input)
