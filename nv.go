@@ -23,6 +23,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -64,22 +65,29 @@ Usage: nv <env file> <command> [arguments...]`
 	fmt.Println(usage)
 }
 
-func loadEnvFile(fn string) []string {
-	file, err := os.Open(fn)
+func readFile(fn string) string {
+	dat, err := ioutil.ReadFile(fn)
 	if err != nil {
 		fmt.Printf("[Err] '%s': Permission denied\n", fn)
 		os.Exit(-1)
 	}
-	defer file.Close()
-	vars := make([]string, 0)
-	scanner := bufio.NewScanner(file)
+	return string(dat)
+}
+
+func parseInput(input string) []string {
+	lines := make([]string, 0)
+	scanner := bufio.NewScanner(strings.NewReader(input))
 	for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) > 0 {
-			vars = append(vars, string(line))
+		line := strings.TrimSpace(scanner.Text())
+		if len(line) > 0 { //ignore empty lines
+			lines = append(lines, string(line))
 		}
 	}
-	return vars
+	return lines
+}
+
+func loadEnvFile(fn string) []string {
+	return parseInput(readFile(fn))
 }
 
 func setEnvVars(envVars []string) {
