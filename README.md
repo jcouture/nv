@@ -44,6 +44,10 @@ It is possible to load multiple `.env` files by separating each filenames with a
 ~> nv .env,.env.dev rails server -p 2808
 ```
 
+## Global Variables
+
+You might need to have global environment variables, overriding context specific ones. Create a file named `~/.nv` at the root of your home directory. It has the same format, and will be loaded last.
+
 ## License
 
 nv is released under the MIT license. See LICENSE for details.

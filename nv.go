@@ -24,10 +24,12 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 
 	"github.com/jcouture/nv/parser"
+	"github.com/mitchellh/go-homedir"
 )
 
 func main() {
@@ -47,16 +49,16 @@ func main() {
 	for _, filename := range filenames {
 		// Parse file
 		parser := parser.NewParser(filename)
-		variables, err := parser.Parse()
+		parsedVars, err := parser.Parse()
 		if err != nil {
 			fmt.Printf("[Err] %s\n", err)
 			os.Exit(-1)
 		}
 		// Merge with possibly existing variables
-		for k, v := range variables {
-			vars[k] = v
-		}
+		mergeVars(vars, parsedVars)
 	}
+
+	loadAndMergeGlobalVars(vars)
 
 	clearEnv()
 	setEnvVars(vars)
@@ -74,8 +76,8 @@ func main() {
 }
 
 func printUsage() {
-	usage := `nv - context specific environment variables
-Usage: nv <env file(s)> <command> [arguments...]`
+	usage := `nv — context specific environment variables
+Usage: nv <env files> <command> [arguments...]`
 	fmt.Println(usage)
 }
 
@@ -83,6 +85,24 @@ func setEnvVars(vars map[string]string) {
 	for k, v := range vars {
 		os.Setenv(k, v)
 	}
+}
+
+func mergeVars(vars1 map[string]string, vars2 map[string]string) {
+	for k, v := range vars2 {
+		vars1[k] = v
+	}
+}
+
+func loadAndMergeGlobalVars(vars map[string]string) {
+	dir, _ := homedir.Dir()
+	fn := filepath.Join(dir, ".nv")
+	parser := parser.NewParser(fn)
+	parsedVars, err := parser.Parse()
+	if err != nil {
+		// Return without breaking a sweat
+		return
+	}
+	mergeVars(vars, parsedVars)
 }
 
 func clearEnv() {
