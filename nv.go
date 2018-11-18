@@ -58,6 +58,7 @@ func main() {
 		}
 	}
 
+	clearEnv()
 	setEnvVars(vars)
 
 	binary, lookErr := exec.LookPath(cmd)
@@ -82,4 +83,11 @@ func setEnvVars(vars map[string]string) {
 	for k, v := range vars {
 		os.Setenv(k, v)
 	}
+}
+
+func clearEnv() {
+	// Clearing everything out the environment... but $PATH (we’re savages)!
+	path := os.Getenv("PATH")
+	os.Clearenv()
+	os.Setenv("PATH", path)
 }

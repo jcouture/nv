@@ -2,6 +2,8 @@
 
 nv is a lightweight utility to load context specific environment variables from either a single or multiple `.env` files before executing a command or command line program, along with its parameters.
 
+As of version 2, the environment is cleared-out before loading context specific variables, except for `$PATH`.
+
 ## Install
 
 ```
