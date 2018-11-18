@@ -21,13 +21,13 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
+
+	"github.com/jcouture/nv/parser"
 )
 
 func main() {
@@ -40,12 +40,25 @@ func main() {
 	cmd := os.Args[2]
 	args := os.Args[2:]
 
-	if !fileExists(fn) {
-		fmt.Printf("[Err] '%s': No such file or directory\n", fn)
-		os.Exit(-1)
+	filenames := strings.Split(fn, ",")
+
+	vars := make(map[string]string)
+
+	for _, filename := range filenames {
+		// Parse file
+		parser := parser.NewParser(filename)
+		variables, err := parser.Parse()
+		if err != nil {
+			fmt.Printf("[Err] %s\n", err)
+			os.Exit(-1)
+		}
+		// Merge with possibly existing variables
+		for k, v := range variables {
+			vars[k] = v
+		}
 	}
 
-	setEnvVars(loadEnvFile(fn))
+	setEnvVars(vars)
 
 	binary, lookErr := exec.LookPath(cmd)
 	if lookErr != nil {
@@ -61,51 +74,12 @@ func main() {
 
 func printUsage() {
 	usage := `nv - context specific environment variables
-Usage: nv <env file> <command> [arguments...]`
+Usage: nv <env file(s)> <command> [arguments...]`
 	fmt.Println(usage)
 }
 
-func readFile(fn string) string {
-	dat, err := ioutil.ReadFile(fn)
-	if err != nil {
-		fmt.Printf("[Err] '%s': Permission denied\n", fn)
-		os.Exit(-1)
+func setEnvVars(vars map[string]string) {
+	for k, v := range vars {
+		os.Setenv(k, v)
 	}
-	return string(dat)
-}
-
-func parseInput(input string) []string {
-	lines := make([]string, 0)
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if len(line) > 0 { //ignore empty lines
-			if !strings.HasPrefix(line, "#") { //ignore comments
-				lines = append(lines, string(line))
-			}
-		}
-	}
-	return lines
-}
-
-func loadEnvFile(fn string) []string {
-	return parseInput(readFile(fn))
-}
-
-func setEnvVars(envVars []string) {
-	for _, envVar := range envVars {
-		result := strings.Split(envVar, "=")
-		if len(result) >= 2 {
-			name := result[0]
-			value := strings.Join(result[1:], "=")
-			os.Setenv(name, value)
-		}
-	}
-}
-
-func fileExists(filename string) bool {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return false
-	}
-	return true
 }
