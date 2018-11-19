@@ -1,0 +1,30 @@
+builds:
+- env:
+  - CGO_ENABLED=0
+  goos:
+    - darwin
+  goarch:
+    - amd64
+archive:
+  replacements:
+    darwin: Darwin
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort:
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+brew:
+  github:
+    owner: jcouture
+    name: homebrew-nv
+  folder: Formula
+  homepage:  https://github.com/jcouture/nv
+  description: Lightweight utility to load context specific environment variables
+  test: |
+    system "#{bin}/nv"
