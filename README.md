@@ -7,9 +7,7 @@ As of version 2, the environment is cleared-out before loading context specific 
 ## Install
 
 ```
-~> brew update
-~> brew tap jcouture/nv
-~> brew install nv
+~> brew install jcouture/nv/nv
 ```
 
 ## Build the Source
