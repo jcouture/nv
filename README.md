@@ -1,16 +1,26 @@
 # nv
 
-nv is a lightweight utility to load context specific environment variables from either a single or multiple `.env` files before executing a command or command line program, along with its parameters.
+`nv` is a lightweight utility to load context specific environment variables from either a single or multiple `.env` files before executing a command or command line program, along with its parameters.
 
 As of version 2, the environment is cleared-out before loading context specific variables, except for `$PATH`.
 
+## Why?
+
+Why use `nv` when there are many [other](https://github.com/motdotla/dotenv) [tools](https://github.com/bkeepers/dotenv) that do pretty much the same thing automatically?
+
+The difference is that `nv` _feeds_ an explicit environment to the process it starts, while those other tools _fetch_ an environment (based on some filename convention) after the process is started.
+
+`nv` is also not language-specific nor framework-specific — it just _feeds_ some environment into the command it’s given to run.
+
 ## Install
+
+You can install `nv` as a [Homebrew](https://brew.sh) package on macOS:
 
 ```
 ~> brew install jcouture/nv/nv
 ```
 
-## Build the Source
+Or you can build it from source:
 
 ```
 ~> mkdir nv
@@ -19,7 +29,7 @@ As of version 2, the environment is cleared-out before loading context specific 
 ~> go get -u github.com/jcouture/nv
 ```
 
-## Usage Example
+## Usage example
 
 You create a `.env` file as follows:
 
@@ -30,7 +40,7 @@ SECRET_KEY_BASE=3b4476c0f6793b575050a1241438c32de8cbd3b7dec67910369657e1c4c41785
 DATABASE_URL=postgres://dbuser:@localhost:5432/playground_dev?pool=10
 ```
 
-You are ready to use `nv` to load your context specific environment variables
+You are ready to use `nv` to load your context specific environment variables.
 
 ```
 ~> nv .env rails server -p 2808
@@ -42,10 +52,10 @@ It is possible to load multiple `.env` files by separating each filenames with a
 ~> nv .env,.env.dev rails server -p 2808
 ```
 
-## Global Variables
+## Global variables
 
 You might need to have global environment variables, overriding context specific ones. Create a file named `~/.nv` at the root of your home directory. It has the same format, and will be loaded last.
 
 ## License
 
-nv is released under the MIT license. See LICENSE for details.
+`nv` is released under the MIT license. See [LICENSE](./LICENSE) for details.
