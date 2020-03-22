@@ -56,6 +56,26 @@ It is possible to load multiple `.env` files by separating each filenames with a
 
 You might need to have global environment variables, overriding context specific ones. Create a file named `~/.nv` at the root of your home directory. It has the same format, and will be loaded last.
 
+## Troubleshooting
+
+If after running a command with `nv`, such as
+
+```
+nv .env rails --version
+```
+you get the following error
+
+```
+unknown command: rails. Perhaps you have to reshim?
+```
+
+try adding the following to your `~/.nv` file.
+
+```
+HOME=/Users/<<your username>>
+USER=<<your username>>
+```
+
 ## License
 
 `nv` is released under the MIT license. See [LICENSE](./LICENSE) for details.
