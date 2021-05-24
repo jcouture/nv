@@ -28,7 +28,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/jcouture/nv/parser"
+	"github.com/jcouture/nv/internal/parser"
 	"github.com/mitchellh/go-homedir"
 )
 
