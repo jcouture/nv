@@ -1,30 +1,43 @@
+project_name: nv
+
+before:
+  hooks:
+    - go mod tidy
+
 builds:
-- env:
-  - CGO_ENABLED=0
-  goos:
-    - darwin
-  goarch:
-    - amd64
-archive:
-  replacements:
-    darwin: Darwin
-    amd64: x86_64
-checksum:
-  name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ .Tag }}-next"
+  - <<: &build_defaults
+      binary: nv
+      main: ./cmd/nv/
+      env:
+        - CGO_ENABLE=0
+    id: macos
+    goos: [darwin]
+    goarch: [amd64, arm64]
+  
+  - <<: *build_defaults
+    id: linux
+    goos: [linux]
+    goarch: [386, arm, amd64, arm64]
+
+  - <<: *build_defaults
+    id: windows
+    goos: [windows]
+    goarch: [386, amd64]
+
 changelog:
-  sort:
+  sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
-brew:
-  github:
-    owner: jcouture
-    name: homebrew-nv
-  folder: Formula
-  homepage:  https://github.com/jcouture/nv
-  description: Lightweight utility to load context specific environment variables
-  test: |
-    system "#{bin}/nv"
+      - '^docs:'
+      - '^test:'
+
+brews:
+  -
+    tap:
+      owner: jcouture
+      name: homebrew-nv
+    folder: Formula
+    homepage:  https://github.com/jcouture/nv
+    description: Lightweight utility to load context specific environment variables
+    test: |
+      system "#{bin}/nv"
