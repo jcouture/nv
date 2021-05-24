@@ -98,3 +98,5 @@ USER=<<your username>>
 ## License
 
 `nv` is released under the MIT license. See [LICENSE](./LICENSE) for details.
+
+The `nv` leaf logo is based on [this icon](https://thenounproject.com/term/leaf/1904973/) by [Nick Bluth](https://thenounproject.com/nickbluth/), from the Noun Project. Used under a [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0/) license.
