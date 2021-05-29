@@ -10,7 +10,7 @@ As of version 2, the environment is cleared-out before loading context specific 
 
 **Warning**
 
-If you are using a version manager such as [asdf](https://asdf-vm.com), `$HOME` and `$USER` could be required. Please see the [Troubleshooting](#troubleshooting) section for more information.
+If you are using a version manager such as [asdf](https://asdf-vm.com), both variables `$HOME` and `$USER` could be required. Please see the [Troubleshooting](#troubleshooting) section for more information.
 
 
 ## Why?
@@ -44,7 +44,31 @@ The difference is that `nv` _feeds_ an explicit environment to the process it st
 
 ### Build from source
 
-Alternatively, you can build it from source:
+Alternatively, you can build it from source.
+
+1. Verify you have Go 1.16+ installed
+
+```sh
+~> go version
+```
+If `Go` is not installed, follow the instructions on the [Go website](https://golang.org/doc/install)
+
+2. Clone this repository
+
+```sh
+~> git clone https://github.com/jcouture/nv.git
+~> cd nv
+```
+
+3. Build
+
+```sh
+~> go mod tidy
+~> go build ./cmd/nv/
+```
+
+While the development version is a good way to take a peek at `nv`’s latest features before they get released, be aware that it may contains bugs. Officially released versions will generally be more stable.
+
 
 
 ## Usage example
@@ -91,7 +115,7 @@ unknown command: rails. Perhaps you have to reshim?
 add the following to your `~/.nv` file:
 
 ```
-HOME=/Users/<<your username>>
+HOME=<<your home directory>
 USER=<<your username>>
 ```
 
