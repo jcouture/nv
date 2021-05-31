@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/jcouture/nv">
-    <img src="https://i.imgur.com/Q9JoskI.png" alt="nv" />
+    <img src="https://user-images.githubusercontent.com/5007/120239413-3ba5c000-c22c-11eb-8008-052bc5f8e7b8.png" alt="nv" />
   </a>
 </p>
 
@@ -12,7 +12,6 @@ As of version 2, the environment is cleared-out before loading context specific 
 
 If you are using a version manager such as [asdf](https://asdf-vm.com), both variables `$HOME` and `$USER` could be required. Please see the [Troubleshooting](#troubleshooting) section for more information.
 
-
 ## Why?
 
 Why use `nv` when there are many [other](https://github.com/motdotla/dotenv) [tools](https://github.com/bkeepers/dotenv) that do pretty much the same thing automatically?
@@ -20,7 +19,6 @@ Why use `nv` when there are many [other](https://github.com/motdotla/dotenv) [to
 The difference is that `nv` _feeds_ an explicit environment to the process it starts, while those other tools _fetch_ an environment (based on some filename convention) after the process is started.
 
 `nv` is also not language-specific nor framework-specific — it just _feeds_ some environment into the command it’s given to run.
-
 
 ## Installation
 
@@ -31,7 +29,7 @@ The difference is that `nv` _feeds_ an explicit environment to the process it st
 #### Homebrew
 
 | Install                       | Upgrade           |
-|-------------------------------|-------------------|
+| ----------------------------- | ----------------- |
 | `brew install jcouture/nv/nv` | `brew upgrade nv` |
 
 ### Linux
@@ -51,6 +49,7 @@ Alternatively, you can build it from source.
 ```sh
 ~> go version
 ```
+
 If `Go` is not installed, follow the instructions on the [Go website](https://golang.org/doc/install)
 
 2. Clone this repository
@@ -68,8 +67,6 @@ If `Go` is not installed, follow the instructions on the [Go website](https://go
 ```
 
 While the development version is a good way to take a peek at `nv`’s latest features before they get released, be aware that it may contains bugs. Officially released versions will generally be more stable.
-
-
 
 ## Usage example
 
@@ -98,7 +95,6 @@ It is possible to load multiple `.env` files by separating each filenames with a
 
 You might need to have global environment variables, overriding context specific ones. Create a file named `~/.nv` at the root of your home directory. It has the same format, and _will be loaded last_.
 
-
 ## Troubleshooting
 
 If after executing a command with `nv`, such as:
@@ -106,6 +102,7 @@ If after executing a command with `nv`, such as:
 ```sh
 ~> nv .env rails --version
 ```
+
 you get the following error:
 
 ```sh
@@ -115,8 +112,8 @@ unknown command: rails. Perhaps you have to reshim?
 add the following to your `~/.nv` file:
 
 ```
-HOME=<<your home directory>
-USER=<<your username>>
+HOME=<your home directory>
+USER=<your username>
 ```
 
 ## License
