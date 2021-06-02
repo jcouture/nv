@@ -1,4 +1,4 @@
-// Copyright 2015-2018 Jean-Philippe Couture
+// Copyright 2015-2021 Jean-Philippe Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/jcouture/nv/parser"
+	"github.com/jcouture/nv/internal/build"
+	"github.com/jcouture/nv/internal/parser"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -76,9 +77,10 @@ func main() {
 }
 
 func printUsage() {
-	usage := `nv — context specific environment variables
-Usage: nv <env files> <command> [arguments...]`
-	fmt.Println(usage)
+	usage := `nv %s(%s) — context specific environment variables
+Usage: nv <env files> <command> [arguments...]
+`
+	fmt.Printf(usage, build.Version, build.Date)
 }
 
 func setEnvVars(vars map[string]string) {
