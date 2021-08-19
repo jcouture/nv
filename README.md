@@ -97,6 +97,8 @@ You might need to have global environment variables, overriding context specific
 
 ## Troubleshooting
 
+### Shims
+
 If after executing a command with `nv`, such as:
 
 ```sh
@@ -114,6 +116,27 @@ add the following to your `~/.nv` file:
 ```
 HOME=<your home directory>
 USER=<your username>
+```
+
+### Interactive TTY
+
+If after executing a command with `nv`, such as:
+
+```sh
+~> nv .env less README.md
+```
+
+you get a similar error or warning:
+
+```
+WARNING: terminal is not fully functional
+-  (press RETURN)
+```
+
+add the following to your `~/.nv` file:
+
+```
+TERM=xterm-color # or any other relevant value for `TERM`
 ```
 
 ## License
