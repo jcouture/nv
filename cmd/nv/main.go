@@ -77,10 +77,10 @@ func main() {
 }
 
 func printUsage() {
-	usage := `nv %s(%s) — context specific environment variables
+	usage := `nv %s — context specific environment variables
 Usage: nv <env files> <command> [arguments...]
 `
-	fmt.Printf(usage, build.Version, build.Date)
+	fmt.Printf(usage, build.Version)
 }
 
 func setEnvVars(vars map[string]string) {
