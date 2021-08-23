@@ -34,9 +34,20 @@ import (
 )
 
 func main() {
+	if len(os.Args) == 2 {
+		cmd := os.Args[1]
+		switch cmd {
+		case "-v", "version", "-version", "--version":
+			printVersion()
+		default:
+			printHelp()
+		}
+		os.Exit(0)
+	}
+
 	if len(os.Args) < 3 {
-		printUsage()
-		os.Exit(-1)
+		printHelp()
+		os.Exit(0)
 	}
 
 	fn := os.Args[1]
@@ -76,11 +87,12 @@ func main() {
 	}
 }
 
-func printUsage() {
-	usage := `nv %s — context specific environment variables
-Usage: nv <env files> <command> [arguments...]
-`
-	fmt.Printf(usage, build.Version)
+func printHelp() {
+	fmt.Printf("usage: nv <env files> <command> [arguments...]\n")
+}
+
+func printVersion() {
+	fmt.Printf("nv version %s\n", build.Version)
 }
 
 func setEnvVars(vars map[string]string) {
