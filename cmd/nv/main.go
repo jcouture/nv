@@ -29,7 +29,7 @@ import (
 	"syscall"
 
 	"github.com/jcouture/nv/internal/build"
-	"github.com/jcouture/nv/internal/parser"
+	"github.com/jcouture/nv/internal/env"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -56,24 +56,23 @@ func main() {
 
 	filenames := strings.Split(fn, ",")
 
-	vars := make(map[string]string)
+	base := make(map[string]string)
 
 	for _, filename := range filenames {
-		// Parse file
-		parser := parser.NewParser(filename)
-		parsedVars, err := parser.Parse()
+		override, err := env.Load(filename)
 		if err != nil {
 			fmt.Printf("[Err] %s\n", err)
 			os.Exit(-1)
 		}
 		// Merge with possibly existing variables
-		mergeVars(vars, parsedVars)
+		base = env.Join(base, override)
 	}
 
-	loadAndMergeGlobalVars(vars)
+	globals := loadGlobals()
+	base = env.Join(base, globals)
 
-	clearEnv()
-	setEnvVars(vars)
+	env.Clear()
+	env.Set(base)
 
 	binary, lookErr := exec.LookPath(cmd)
 	if lookErr != nil {
@@ -95,33 +94,11 @@ func printVersion() {
 	fmt.Printf("nv version %s\n", build.Version)
 }
 
-func setEnvVars(vars map[string]string) {
-	for k, v := range vars {
-		os.Setenv(k, v)
-	}
-}
+func loadGlobals() map[string]string {
+	hdir, _ := homedir.Dir()
+	fn := filepath.Join(hdir, ".nv")
+	// Purposefuly ignoring any errors
+	globals, _ := env.Load(fn)
 
-func mergeVars(vars1 map[string]string, vars2 map[string]string) {
-	for k, v := range vars2 {
-		vars1[k] = v
-	}
-}
-
-func loadAndMergeGlobalVars(vars map[string]string) {
-	dir, _ := homedir.Dir()
-	fn := filepath.Join(dir, ".nv")
-	parser := parser.NewParser(fn)
-	parsedVars, err := parser.Parse()
-	if err != nil {
-		// Return without breaking a sweat
-		return
-	}
-	mergeVars(vars, parsedVars)
-}
-
-func clearEnv() {
-	// Clearing everything out the environment... but $PATH (we’re savages)!
-	path := os.Getenv("PATH")
-	os.Clearenv()
-	os.Setenv("PATH", path)
+	return globals
 }
