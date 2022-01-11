@@ -87,7 +87,8 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Printf("usage: nv <env files> <command> [arguments...]\n")
+	fmt.Printf("usage: nv [--version] [--help]\n")
+	fmt.Printf("          <env files> <command> [arguments...]\n")
 }
 
 func printVersion() {
