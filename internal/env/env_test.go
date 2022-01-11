@@ -18,6 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package build
+package env
 
-var Version = "DEV"
+import (
+	"os"
+	"testing"
+)
+
+func TestSet(t *testing.T) {
+	name := "FOO"
+	expected := "BAR"
+
+	vars := make(map[string]string)
+	vars[name] = "BAR"
+	Set(vars)
+
+	result := os.Getenv(name)
+	if result != expected {
+		t.Errorf("Expected: %s, got: %s\n", expected, result)
+	}
+}
+
+func TestJoin(t *testing.T) {
+	base := make(map[string]string)
+	base["FOO"] = "BAR"
+
+	override := make(map[string]string)
+	override["COLOR"] = "RED"
+
+	result := Join(base, override)
+
+	if len(result) != 2 {
+		t.Errorf("Expected length: 2, got: %d\n", len(result))
+	}
+
+	if result["FOO"] != "BAR" {
+		t.Errorf("Expected FOO == BAR, got FOO == %s\n", result["FOO"])
+	}
+}

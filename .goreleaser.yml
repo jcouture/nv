@@ -11,7 +11,7 @@ builds:
       env:
         - CGO_ENABLE=0
       ldflags:
-        - -s -w -X github.com/jcouture/nv/internal/build.Version={{.Version}} -X github.com/jcouture/nv/internal/build.Date={{time "2006-01-02"}}
+        - -s -w -X github.com/jcouture/nv/internal/build.Version={{.Version}}
     id: macos
     goos: [darwin]
     goarch: [amd64, arm64]
@@ -24,7 +24,7 @@ builds:
   - <<: *build_defaults
     id: windows
     goos: [windows]
-    goarch: [386, amd64, arm]
+    goarch: [386, amd64, arm, arm64]
 
 checksum:
   name_template: 'checksums.txt'

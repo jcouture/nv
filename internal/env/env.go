@@ -18,6 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package build
+package env
 
-var Version = "DEV"
+import (
+	"os"
+
+	"github.com/jcouture/nv/internal/parser"
+)
+
+func Set(vars map[string]string) {
+	for k, v := range vars {
+		os.Setenv(k, v)
+	}
+}
+
+func Join(base map[string]string, override map[string]string) map[string]string {
+	if len(base) == 0 {
+		return override
+	}
+	for k, v := range override {
+		base[k] = v
+	}
+
+	return base
+}
+
+func Load(fn string) (map[string]string, error) {
+	parser := parser.NewParser(fn)
+	return parser.Parse()
+}
+
+func Clear() {
+	// Clearing everything out the environment... except $PATH (we’re savages)!
+	path := os.Getenv("PATH")
+	os.Clearenv()
+	os.Setenv("PATH", path)
+}
