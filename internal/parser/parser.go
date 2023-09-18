@@ -23,7 +23,6 @@ package parser
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -37,34 +36,36 @@ func NewParser(fn string) *Parser {
 }
 
 func (p *Parser) Parse() (map[string]string, error) {
-	if !p.fileExists(p.Filename) {
+	if !p.fileExists() {
 		return nil, fmt.Errorf("'%s': No such file or directory", p.Filename)
 	}
 
-	content := p.readFile(p.Filename)
-	lines := p.readLines(content)
-	variables := p.extractVariables(lines)
+	content, err := p.readFile()
+	if err != nil {
+		return nil, err
+	}
+	lines := readLines(content)
+	variables := extractVariables(lines)
 
 	return variables, nil
 }
 
-func (p *Parser) fileExists(fn string) bool {
-	if _, err := os.Stat(fn); os.IsNotExist(err) {
+func (p *Parser) fileExists() bool {
+	if _, err := os.Stat(p.Filename); os.IsNotExist(err) {
 		return false
 	}
 	return true
 }
 
-func (p *Parser) readFile(fn string) string {
-	dat, err := ioutil.ReadFile(fn)
+func (p *Parser) readFile() (string, error) {
+	dat, err := os.ReadFile(p.Filename)
 	if err != nil {
-		fmt.Printf("[Err] '%s': Permission denied\n", fn)
-		os.Exit(-1)
+		return "", err
 	}
-	return string(dat)
+	return string(dat), nil
 }
 
-func (p *Parser) readLines(input string) []string {
+func readLines(input string) []string {
 	lines := make([]string, 0)
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	for scanner.Scan() {
@@ -78,7 +79,7 @@ func (p *Parser) readLines(input string) []string {
 	return lines
 }
 
-func (p *Parser) extractVariables(lines []string) map[string]string {
+func extractVariables(lines []string) map[string]string {
 	variables := make(map[string]string)
 
 	for _, line := range lines {

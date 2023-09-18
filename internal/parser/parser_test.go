@@ -21,42 +21,92 @@
 package parser
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
+func TestFileExists(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    bool
+	}{
+		{"File exists", "testdata/.env", true},
+		{"File does not exist", "testdata/.env2", false},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.description, func(t *testing.T) {
+			p := NewParser(tt.input)
+			result := p.fileExists()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestReadFile(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    string
+	}{
+		{"Standard .env file", "testdata/.env", "PORT=4200\nSECRET_KEY=1234567\nDATABASE_URL=postgres://simonprev:@localhost:5432/accent_playground_dev?pool=10\n"},
+		{"File does not exist", "testdata/.env2", ""},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.description, func(t *testing.T) {
+			p := NewParser(tt.input)
+			result, err := p.readFile()
+			if err != nil {
+				assert.Error(t, err)
+			}
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestReadLines(t *testing.T) {
-	input := `PORT=4200
-	SECRET_KEY=1234567
+	cases := []struct {
+		description string
+		input       string
+		expected    []string
+	}{
+		{"A couple of lines", "LINE1\nLINE2", []string{"LINE1", "LINE2"}},
+		{"Non empty lines with spaces", "  LINE1  \n  LINE2  ", []string{"LINE1", "LINE2"}},
+		{"Empty lines", "\n\n", []string{}},
+		{"Empty lines with spaces", "  \n  \n", []string{}},
+		{"Empty lines with tabs", "\t\t\n\t\t\n", []string{}},
+		{"Empty lines with spaces and tabs", "  \t\n  \t\n", []string{}},
+		{"Lines, with a comment", "LINE1\n#LINE2\nLINE3", []string{"LINE1", "LINE3"}},
+	}
 
-	# This is comment
-	DATABASE_URL=postgres://simonprev:@localhost:5432/accent_playground_dev?pool=10
-	`
-
-	p := new(Parser)
-
-	lines := p.readLines(input)
-	fmt.Printf("lines: %v\n", lines)
-	actualSize := len(lines)
-	expectedSize := 3
-	if actualSize != expectedSize {
-		t.Error("Expected: ", expectedSize, ", got: ", actualSize)
+	for _, tt := range cases {
+		t.Run(tt.description, func(t *testing.T) {
+			result := readLines(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
 	}
 }
 
 func TestExtractVariables(t *testing.T) {
-	input := make([]string, 3)
-	input[0] = "PORT=4200"
-	input[1] = "SECRET_KEY=1234567"
-	input[2] = "DATABASE_URL=postgres://simonprev:@localhost:5432/accent_playground_dev?pool=10"
+	cases := []struct {
+		description string
+		input       []string
+		expected    map[string]string
+	}{
+		{"Key and value", []string{"PORT=4200"}, map[string]string{"PORT": "4200"}},
+		{"Key and value with spaces", []string{"PORT = 4200"}, map[string]string{"PORT ": " 4200"}},
+		{"Key and value with tabs", []string{"PORT\t=\t4200"}, map[string]string{"PORT\t": "\t4200"}},
+		{"Key and value with spaces and tabs", []string{"PORT \t = \t 4200"}, map[string]string{"PORT \t ": " \t 4200"}},
+		{"Key and value with extra equal sign", []string{"PORT=42=00"}, map[string]string{"PORT": "42=00"}},
+	}
 
-	p := new(Parser)
-
-	variables := p.extractVariables(input)
-	fmt.Printf("variables: %v\n", variables)
-	actualSize := len(variables)
-	expectedSize := 3
-	if actualSize != expectedSize {
-		t.Error("Expected: ", expectedSize, ", got: ", actualSize)
+	for _, tt := range cases {
+		t.Run(tt.description, func(t *testing.T) {
+			result := extractVariables(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
 	}
 }
