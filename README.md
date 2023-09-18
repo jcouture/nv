@@ -44,7 +44,7 @@ The difference is that `nv` _feeds_ an explicit environment to the process it st
 
 Alternatively, you can build it from source.
 
-1. Verify you have Go 1.16+ installed
+1. Verify you have Go 1.20+ installed
 
 ```sh
 ~> go version
