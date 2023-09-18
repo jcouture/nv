@@ -28,8 +28,9 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/jcouture/env"
 	"github.com/jcouture/nv/internal/build"
-	"github.com/jcouture/nv/internal/env"
+	"github.com/jcouture/nv/internal/parser"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -59,7 +60,7 @@ func main() {
 	base := make(map[string]string)
 
 	for _, filename := range filenames {
-		override, err := env.Load(filename)
+		override, err := loadVars(filename)
 		if err != nil {
 			fmt.Printf("[Err] %s\n", err)
 			os.Exit(-1)
@@ -71,8 +72,9 @@ func main() {
 	globals := loadGlobals()
 	base = env.Join(base, globals)
 
-	env.Clear()
-	env.Set(base)
+	// Clearing everything out the environment... except $PATH (we’re savages)!
+	env.Clear("PATH")
+	env.Setvars(base)
 
 	binary, lookErr := exec.LookPath(cmd)
 	if lookErr != nil {
@@ -95,11 +97,16 @@ func printVersion() {
 	fmt.Printf("nv version %s\n", build.Version)
 }
 
+func loadVars(fn string) (map[string]string, error) {
+	parser := parser.NewParser(fn)
+	return parser.Parse()
+}
+
 func loadGlobals() map[string]string {
 	hdir, _ := homedir.Dir()
 	fn := filepath.Join(hdir, ".nv")
 	// Purposefuly ignoring any errors
-	globals, _ := env.Load(fn)
+	globals, _ := loadVars(fn)
 
 	return globals
 }
