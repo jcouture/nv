@@ -26,6 +26,13 @@ builds:
     goos: [windows]
     goarch: [386, amd64, arm, arm64]
 
+upx:
+  - enabled: true
+    goos: [darwin, linux, windows]
+    compress: best
+    lzma: true
+    brute: true
+
 checksum:
   name_template: 'checksums.txt'
 
@@ -37,8 +44,7 @@ changelog:
       - '^test:'
 
 brews:
-  -
-    tap:
+  - repository:
       owner: jcouture
       name: homebrew-nv
     folder: Formula
