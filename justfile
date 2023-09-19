@@ -13,7 +13,7 @@
 
 # Launch the executable with optional arguments
 @run *ARGS:
-  go run ./cmd/nv/main.go {{ARGS}}
+  go run ./cmd/nv/nv.go {{ARGS}}
 
 # Git tag a version
 @tag VERSION:
