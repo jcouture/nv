@@ -26,6 +26,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestParse(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    map[string]string
+	}{
+		{"Simple file", "testdata/.env", map[string]string{"PORT": "4200", "SECRET_KEY": "1234567", "DATABASE_URL": "postgres://simonprev:@localhost:5432/accent_playground_dev?pool=10"}},
+		{"Empty file", "testdata/empty.env", map[string]string{}},
+		{"Non-existent file", "testdata/non-existent.env", nil},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.description, func(t *testing.T) {
+			p := NewParser(tt.input)
+			result, err := p.Parse()
+			if err != nil {
+				assert.Error(t, err)
+			}
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestFileExists(t *testing.T) {
 	cases := []struct {
 		description string
@@ -96,6 +119,7 @@ func TestExtractVariables(t *testing.T) {
 		input       []string
 		expected    map[string]string
 	}{
+		{"Empty", []string{}, map[string]string{}},
 		{"Key and value", []string{"PORT=4200"}, map[string]string{"PORT": "4200"}},
 		{"Key and value with spaces", []string{"PORT = 4200"}, map[string]string{"PORT ": " 4200"}},
 		{"Key and value with tabs", []string{"PORT\t=\t4200"}, map[string]string{"PORT\t": "\t4200"}},
