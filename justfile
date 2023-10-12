@@ -9,7 +9,7 @@
 
 # Dry-run GoReleaser
 @release-dry-run:
-  goreleaser --snapshot --skip-publish --clean
+  goreleaser --snapshot --skip=publish --clean
 
 # Launch the executable with optional arguments
 @run *ARGS:
