@@ -15,7 +15,7 @@ builds:
     id: macos
     goos: [darwin]
     goarch: [amd64, arm64]
-  
+
   - <<: *build_defaults
     id: linux
     goos: [linux]
@@ -33,22 +33,33 @@ upx:
     lzma: true
     brute: true
 
+signs:
+  - cmd: cosign
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+    args:
+      - "sign-blob"
+      - "--key=env://COSIGN_PRIVATE_KEY"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: all
+
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"
 
 brews:
   - repository:
       owner: jcouture
       name: homebrew-nv
     folder: Formula
-    homepage:  https://github.com/jcouture/nv
+    homepage: https://github.com/jcouture/nv
     description: Lightweight utility to load context specific environment variables
     test: |
       system "#{bin}/nv"
