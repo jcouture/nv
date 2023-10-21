@@ -1,4 +1,4 @@
-// Copyright 2015-2022 Jean-Philippe Couture
+// Copyright 2015-2023 Jean-Philippe Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,41 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package env
+package sys
 
 import (
-	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestSet(t *testing.T) {
-	name := "FOO"
-	expected := "BAR"
-
-	vars := make(map[string]string)
-	vars[name] = "BAR"
-	Set(vars)
-
-	result := os.Getenv(name)
-	if result != expected {
-		t.Errorf("Expected: %s, got: %s\n", expected, result)
-	}
-}
-
-func TestJoin(t *testing.T) {
-	base := make(map[string]string)
-	base["FOO"] = "BAR"
-
-	override := make(map[string]string)
-	override["COLOR"] = "RED"
-
-	result := Join(base, override)
-
-	if len(result) != 2 {
-		t.Errorf("Expected length: 2, got: %d\n", len(result))
+func TestReadVarsFromFile(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    map[string]string
+	}{
+		{"Simple file", "testdata/.env", map[string]string{"PORT": "4200", "SECRET_KEY": "1234567890"}},
+		{"Empty file", "testdata/empty.env", map[string]string{}},
+		{"Non-existent file", "testdata/non-existent.env", nil},
 	}
 
-	if result["FOO"] != "BAR" {
-		t.Errorf("Expected FOO == BAR, got FOO == %s\n", result["FOO"])
+	for _, tt := range cases {
+		t.Run(tt.description, func(t *testing.T) {
+			result, err := ReadVarsFromFile(tt.input)
+			if err != nil {
+				assert.Error(t, err)
+			}
+			assert.Equal(t, tt.expected, result)
+		})
 	}
 }

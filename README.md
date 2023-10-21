@@ -4,6 +4,11 @@
   </a>
 </p>
 
+[![Release](https://img.shields.io/github/release/jcouture/nv.svg?style=for-the-badge)](https://github.com/jcouture/nv/releases/latest)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](/LICENSE.md)
+[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge)](http://godoc.org/github.com/jcouture/nv)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jcouture/nv?style=for-the-badge)](https://https://goreportcard.com/badge/github.com/jcouture/nv)
+
 `nv` is a lightweight utility to load context specific environment variables from either a single or multiple `.env` files before executing a command or command line program, along with its parameters.
 
 As of version 2, the environment is cleared-out before loading context specific variables, except for `$PATH`.
@@ -44,7 +49,7 @@ The difference is that `nv` _feeds_ an explicit environment to the process it st
 
 Alternatively, you can build it from source.
 
-1. Verify you have Go 1.16+ installed
+1. Verify you have Go 1.20+ installed
 
 ```sh
 ~> go version
@@ -60,10 +65,10 @@ If `Go` is not installed, follow the instructions on the [Go website](https://go
 ```
 
 3. Build
+   `nv` uses [just](https://just.systems) as command runner for a few handy commands shortcut.
 
 ```sh
-~> go mod tidy
-~> go build ./cmd/nv/
+~> just build
 ```
 
 While the development version is a good way to take a peek at `nv`’s latest features before they get released, be aware that it may contains bugs. Officially released versions will generally be more stable.

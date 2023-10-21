@@ -1,4 +1,4 @@
-// Copyright 2015-2022 Jean-Philippe Couture
+// Copyright 2015-2023 Jean-Philippe Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package env
+package sys
 
 import (
-	"os"
+	"path/filepath"
 
 	"github.com/jcouture/nv/internal/parser"
+	"github.com/mitchellh/go-homedir"
 )
 
-func Set(vars map[string]string) {
-	for k, v := range vars {
-		os.Setenv(k, v)
-	}
-}
-
-func Join(base map[string]string, override map[string]string) map[string]string {
-	if len(base) == 0 {
-		return override
-	}
-	for k, v := range override {
-		base[k] = v
-	}
-
-	return base
-}
-
-func Load(fn string) (map[string]string, error) {
+func ReadVarsFromFile(fn string) (map[string]string, error) {
 	parser := parser.NewParser(fn)
 	return parser.Parse()
 }
 
-func Clear() {
-	// Clearing everything out the environment... except $PATH (we’re savages)!
-	path := os.Getenv("PATH")
-	os.Clearenv()
-	os.Setenv("PATH", path)
+func ReadGlobalVars() map[string]string {
+	hdir, _ := homedir.Dir()
+	fn := filepath.Join(hdir, ".nv")
+	// Purposefuly ignoring any errors
+	globals, _ := ReadVarsFromFile(fn)
+
+	return globals
 }

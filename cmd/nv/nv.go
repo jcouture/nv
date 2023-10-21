@@ -1,4 +1,4 @@
-// Copyright 2015-2022 Jean-Philippe Couture
+// Copyright 2015-2023 Jean-Philippe Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,12 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"syscall"
 
+	"github.com/jcouture/env"
 	"github.com/jcouture/nv/internal/build"
-	"github.com/jcouture/nv/internal/env"
-	"github.com/mitchellh/go-homedir"
+	"github.com/jcouture/nv/internal/sys"
 )
 
 func main() {
@@ -59,29 +58,29 @@ func main() {
 	base := make(map[string]string)
 
 	for _, filename := range filenames {
-		override, err := env.Load(filename)
+		override, err := sys.ReadVarsFromFile(filename)
 		if err != nil {
-			fmt.Printf("[Err] %s\n", err)
+			fmt.Printf("%s\n", err)
 			os.Exit(-1)
 		}
 		// Merge with possibly existing variables
 		base = env.Join(base, override)
 	}
 
-	globals := loadGlobals()
+	globals := sys.ReadGlobalVars()
 	base = env.Join(base, globals)
 
-	env.Clear()
-	env.Set(base)
+	// Clearing everything out the environment... except $PATH (we’re savages)!
+	env.Clear("PATH")
+	env.Setvars(base)
 
-	binary, lookErr := exec.LookPath(cmd)
-	if lookErr != nil {
-		binary = cmd
+	bin, err := exec.LookPath(cmd)
+	if err != nil {
+		bin = cmd
 	}
 
-	execErr := syscall.Exec(binary, args, os.Environ())
-	if execErr != nil {
-		fmt.Println("[Err] Cannot execute:", binary)
+	if err := syscall.Exec(bin, args, os.Environ()); err != nil {
+		fmt.Println("cannot execute:", bin)
 		os.Exit(-1)
 	}
 }
@@ -93,13 +92,4 @@ func printHelp() {
 
 func printVersion() {
 	fmt.Printf("nv version %s\n", build.Version)
-}
-
-func loadGlobals() map[string]string {
-	hdir, _ := homedir.Dir()
-	fn := filepath.Join(hdir, ".nv")
-	// Purposefuly ignoring any errors
-	globals, _ := env.Load(fn)
-
-	return globals
 }
