@@ -1,6 +1,17 @@
+bin := "nv"
+
 # Run Aqua Security’s Trivy to catch possible vulnerabilities in the codebase
 @audit:
   docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v {{justfile_directory()}}:/path aquasec/trivy fs --scanners config,secret,vuln /path
+
+# Build nv’s executable
+@build $GO_ENABLED="0": clean
+  go mod download && go mod verify
+  go build -ldflags="-w -s" -v -x -o {{bin}} ./cmd/nv
+
+# Delete nv’s executable
+@clean:
+  rm -f {{bin}}
 
 # Update dependencies
 @go-mod-update:
