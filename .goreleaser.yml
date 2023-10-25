@@ -26,13 +26,6 @@ builds:
     goos: [windows]
     goarch: [386, amd64, arm, arm64]
 
-upx:
-  - enabled: true
-    goos: [darwin, linux, windows]
-    compress: best
-    lzma: true
-    brute: true
-
 signs:
   - cmd: cosign
     stdin: "{{ .Env.COSIGN_PASSWORD }}"
