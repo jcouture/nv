@@ -18,7 +18,7 @@ BUILD_FLAGS ?= $(strip $(if $(LDFLAGS),-ldflags "$(LDFLAGS)"))
 
 TEST_PKGS ?= ./...
 
-.PHONY: build clean help fmt vet tidy precommit test install
+.PHONY: build clean help fmt vet gosec tidy precommit test install
 
 .DEFAULT_GOAL := help
 
@@ -48,12 +48,17 @@ vet:
 	@go vet ./...
 	@echo "Vet passed"
 
+## Security analysis (gosec)
+gosec:
+	@gosec ./...
+	@echo "Gosec passed"
+
 ## Tidy modules (writes go.mod/go.sum if needed)
 tidy:
 	@go mod tidy -v
 
 ## Local pre-commit convenience (writes fmt/tidy)
-precommit: fmt tidy vet test
+precommit: fmt tidy vet gosec test
 	@echo "Pre-commit checks passed"
 
 ## Clean build artifacts

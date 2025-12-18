@@ -2,3 +2,4 @@
 go = "1.25.5"
 goreleaser = "2.13.0"
 gotestsum = "1.13.0"
+"ubi:securego/gosec" = "latest"

@@ -79,6 +79,7 @@ func main() {
 		bin = cmd
 	}
 
+	// #nosec G204
 	if err := syscall.Exec(bin, args, os.Environ()); err != nil {
 		fmt.Println("cannot execute:", bin)
 		os.Exit(-1)
