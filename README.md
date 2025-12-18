@@ -96,6 +96,17 @@ It is possible to load multiple `.env` files by separating each filenames with a
 ~> nv .env,.env.dev rails server -p 2808
 ```
 
+## Supported `.env` syntax
+
+The parser accepts the same conventions as the Ruby `dotenv` gem:
+
+- `KEY=value` assignments with optional `export` prefix.
+- Full-line comments beginning with `#` and inline comments outside quotes.
+- Unquoted values, single-quoted literals, and double-quoted values with escapes (`\\`, `\n`, `\r`, `\t`, `\"`).
+- Multiline values inside single or double quotes.
+- Variable interpolation in unquoted and double-quoted values using `$VAR` and `${VAR}` (earlier definitions win, then existing environment).
+- `PATH` expansions keep references to the incoming `PATH` when `$PATH`/`${PATH}` is present.
+
 ## Global variables
 
 You might need to have global environment variables, overriding context specific ones. Create a file named `~/.nv` at the root of your home directory. It has the same format, and _will be loaded last_.
