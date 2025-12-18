@@ -21,15 +21,17 @@
 package sys
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jcouture/nv/internal/parser"
 	"github.com/mitchellh/go-homedir"
 )
 
 func ReadVarsFromFile(fn string) (map[string]string, error) {
-	parser := parser.NewParser(fn)
-	return parser.Parse()
+	env := currentEnv()
+	return parser.ParseFile(fn, parser.WithExistingEnv(env))
 }
 
 func ReadGlobalVars() map[string]string {
@@ -39,4 +41,15 @@ func ReadGlobalVars() map[string]string {
 	globals, _ := ReadVarsFromFile(fn)
 
 	return globals
+}
+
+func currentEnv() map[string]string {
+	env := make(map[string]string)
+	for _, kv := range os.Environ() {
+		parts := strings.SplitN(kv, "=", 2)
+		if len(parts) == 2 {
+			env[parts[0]] = parts[1]
+		}
+	}
+	return env
 }
