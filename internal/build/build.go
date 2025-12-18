@@ -20,4 +20,8 @@
 
 package build
 
-var Version = "DEV"
+var (
+	Version   = "DEV"
+	GitCommit = ""
+	BuildDate = ""
+)

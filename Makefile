@@ -13,7 +13,7 @@ export GOCACHE := $(GOCACHE_DIR)
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_DATE ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-LDFLAGS ?= -X main.Version=$(VERSION) -X main.GitCommit=$(COMMIT) -X main.BuildDate=$(BUILD_DATE)
+LDFLAGS ?= -X github.com/jcouture/nv/internal/build.Version=$(VERSION) -X github.com/jcouture/nv/internal/build.GitCommit=$(COMMIT) -X github.com/jcouture/nv/internal/build.BuildDate=$(BUILD_DATE)
 BUILD_FLAGS ?= $(strip $(if $(LDFLAGS),-ldflags "$(LDFLAGS)"))
 
 TEST_PKGS ?= ./...
