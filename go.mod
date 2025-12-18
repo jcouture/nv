@@ -1,6 +1,6 @@
 module github.com/jcouture/nv
 
-go 1.20
+go 1.25.5
 
 require (
 	github.com/jcouture/env v0.1.0
