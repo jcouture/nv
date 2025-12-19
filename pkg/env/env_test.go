@@ -44,7 +44,9 @@ func TestClear(t *testing.T) {
 	os.Setenv(keepKey, "keep")
 	os.Setenv(dropKey, "drop")
 
-	Clear(keepKey)
+	if err := Clear(keepKey); err != nil {
+		t.Fatalf("Clear returned error: %v", err)
+	}
 
 	if val, ok := os.LookupEnv(keepKey); !ok || val != "keep" {
 		t.Fatalf("expected %s to be kept", keepKey)

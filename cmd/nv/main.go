@@ -76,7 +76,10 @@ func run(args []string) int {
 
 	base = env.Join(base, sys.ReadGlobalVars())
 
-	env.Clear("PATH")
+	if err := env.Clear("PATH"); err != nil {
+		fmt.Printf("%s\n", err)
+		return -1
+	}
 	if err := setvarsFunc(base); err != nil {
 		fmt.Printf("%s\n", err)
 		return -1

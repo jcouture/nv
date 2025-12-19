@@ -21,17 +21,26 @@
 package env
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 )
 
 // Clear removes all environment variables except the provided list.
-func Clear(except ...string) {
+func Clear(except ...string) error {
+	var errs []error
 	for _, name := range Getnames(Getvars()) {
 		if !contains(except, name) {
-			os.Unsetenv(name)
+			if err := os.Unsetenv(name); err != nil {
+				errs = append(errs, fmt.Errorf("unset %s: %w", name, err))
+			}
 		}
 	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
 }
 
 // Exists reports whether the variable is present in the environment.

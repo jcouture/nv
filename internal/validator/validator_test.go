@@ -23,6 +23,7 @@ package validator
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -117,5 +118,19 @@ func TestValidateMissingSchemaFile(t *testing.T) {
 	_, err := Validate("does-not-exist.env", map[string]string{}, Options{})
 	if err == nil {
 		t.Fatal("expected error for missing schema file")
+	}
+}
+
+func TestValidateOversizedSchemaLine(t *testing.T) {
+	tmpDir := t.TempDir()
+	schemaPath := filepath.Join(tmpDir, ".env.example")
+	oversized := "API_KEY=" + strings.Repeat("A", maxSchemaLineSize+1) + "\n"
+	if err := os.WriteFile(schemaPath, []byte(oversized), 0o644); err != nil {
+		t.Fatalf("write schema: %v", err)
+	}
+
+	_, err := Validate(schemaPath, map[string]string{}, Options{})
+	if err == nil {
+		t.Fatal("expected error for oversized schema line")
 	}
 }
