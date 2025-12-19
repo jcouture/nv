@@ -27,9 +27,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/jcouture/env"
 	"github.com/jcouture/nv/internal/build"
 	"github.com/jcouture/nv/internal/sys"
+	"github.com/jcouture/nv/pkg/env"
 )
 
 func main() {
@@ -72,7 +72,10 @@ func main() {
 
 	// Clearing everything out the environment... except $PATH (we’re savages)!
 	env.Clear("PATH")
-	env.Setvars(base)
+	if err := env.Setvars(base); err != nil {
+		fmt.Printf("cannot set environment: %v\n", err)
+		os.Exit(-1)
+	}
 
 	bin, err := exec.LookPath(cmd)
 	if err != nil {
