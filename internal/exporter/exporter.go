@@ -18,9 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cli
+package exporter
 
-const (
-	defaultEnvFile    = ".env"
-	defaultSchemaFile = ".env.example"
+import (
+	"fmt"
+	"io"
+
+	"github.com/fatih/color"
 )
+
+type Options struct {
+	Format       string
+	Unredacted   bool
+	Color        bool
+	MaskPatterns []string
+}
+
+func Write(w io.Writer, env map[string]string, opts Options) error {
+	format := opts.Format
+	if format == "" {
+		format = FormatShell
+	}
+
+	opts.Color = !color.NoColor
+	patterns, err := compileValuePatterns(opts.MaskPatterns)
+	if err != nil {
+		return fmt.Errorf("invalid mask pattern: %w", err)
+	}
+
+	switch format {
+	case FormatShell:
+		return writeShell(w, env, opts, patterns)
+	case FormatJSON:
+		return writeJSON(w, env, opts, patterns)
+	default:
+		return fmt.Errorf("unsupported format %q", format)
+	}
+}

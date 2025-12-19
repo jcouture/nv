@@ -23,40 +23,31 @@ package cli
 import (
 	"os"
 
-	"github.com/jcouture/nv/internal/exec"
 	"github.com/jcouture/nv/internal/exporter"
 	"github.com/spf13/cobra"
 )
 
-type runOptions struct {
+type exportOptions struct {
 	envFiles     []string
 	cascade      bool
 	env          string
 	overrides    []string
 	strict       bool
 	preserve     []string
-	dryRun       bool
-	validate     bool
-	schemaFile   string
-	schemaStrict bool
 	format       string
 	unredacted   bool
 	maskPatterns []string
 }
 
-func newRunCmd() *cobra.Command {
-	opts := &runOptions{}
+func newExportCmd() *cobra.Command {
+	opts := &exportOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "run [flags] -- <command> [args...]",
-		Short: "Execute a command with loaded environment",
-		Long:  "Load environment variables from .env files and execute the specified command.",
-		Example: `  nvx run -e .env -- ./myapp
-  nvx run -e .env -e .env.local -- npm start
-  nvx run --cascade --env=production -- ./deploy.sh`,
-		Args: cobra.MinimumNArgs(1),
+		Use:   "export [flags]",
+		Short: "Export the compiled environment",
+		Long:  "Load environment variables from .env files and print the compiled result.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRun(opts, args)
+			return runExport(opts)
 		},
 	}
 
@@ -67,19 +58,14 @@ func newRunCmd() *cobra.Command {
 	flags.StringSliceVarP(&opts.overrides, "override", "o", nil, "Inline overrides (KEY=value)")
 	flags.BoolVar(&opts.strict, "strict", false, "Fail on unresolved interpolation")
 	flags.StringSliceVarP(&opts.preserve, "preserve", "p", []string{"PATH", "HOME", "USER"}, "System variables to preserve")
-	flags.BoolVar(&opts.dryRun, "dry-run", false, "Print environment without executing")
-	flags.BoolVar(&opts.validate, "validate", false, "Validate environment variables before execution")
-	flags.StringVar(&opts.schemaFile, "schema", defaultSchemaFile, "Schema file to validate against")
-	flags.StringVar(&opts.schemaFile, "schema-file", defaultSchemaFile, "Schema file to validate against")
-	flags.BoolVar(&opts.schemaStrict, "schema-strict", false, "Warn on environment variables not present in schema")
-	flags.StringVar(&opts.format, "format", exporter.FormatShell, "Export format for dry run (shell or json)")
-	flags.BoolVar(&opts.unredacted, "unredacted", false, "Show unredacted values in dry run output")
+	flags.StringVar(&opts.format, "format", exporter.FormatShell, "Export format (shell or json)")
+	flags.BoolVar(&opts.unredacted, "unredacted", false, "Show unredacted values")
 	flags.StringSliceVar(&opts.maskPatterns, "mask-pattern", nil, "Additional regex patterns to mask by value")
 
 	return cmd
 }
 
-func runRun(opts *runOptions, args []string) error {
+func runExport(opts *exportOptions) error {
 	env, err := loadEnvironment(envOptions{
 		envFiles:  opts.envFiles,
 		cascade:   opts.cascade,
@@ -92,29 +78,9 @@ func runRun(opts *runOptions, args []string) error {
 		return err
 	}
 
-	if opts.validate {
-		if err := validateEnvironment(env, validationOptions{
-			schemaFile: opts.schemaFile,
-			strict:     opts.schemaStrict,
-			envFiles:   opts.envFiles,
-		}); err != nil {
-			return err
-		}
-	}
-
-	if opts.dryRun {
-		return exporter.Write(os.Stdout, env, exporter.Options{
-			Format:       opts.format,
-			Unredacted:   opts.unredacted,
-			MaskPatterns: opts.maskPatterns,
-		})
-	}
-
-	runner := exec.NewRunner(env, args[0], args[1:])
-	exitCode, err := runner.Run()
-	if err != nil {
-		return err
-	}
-
-	return exitError{code: exitCode}
+	return exporter.Write(os.Stdout, env, exporter.Options{
+		Format:       opts.format,
+		Unredacted:   opts.unredacted,
+		MaskPatterns: opts.maskPatterns,
+	})
 }

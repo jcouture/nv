@@ -44,6 +44,7 @@ func NewRunner(env map[string]string, command string, args []string) *Runner {
 func (r *Runner) Run() (int, error) {
 	// #nosec G204 -- command execution is the intended behavior for this runner.
 	cmd := exec.Command(r.command, r.args...)
+	setProcessGroup(cmd)
 
 	cmd.Env = make([]string, 0, len(r.env))
 	for k, v := range r.env {
@@ -63,9 +64,7 @@ func (r *Runner) Run() (int, error) {
 
 	go func() {
 		for sig := range sigChan {
-			if cmd.Process != nil {
-				_ = cmd.Process.Signal(sig)
-			}
+			forwardSignal(cmd, sig)
 		}
 	}()
 
@@ -73,17 +72,27 @@ func (r *Runner) Run() (int, error) {
 	signal.Stop(sigChan)
 	close(sigChan)
 
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				if status.Signaled() {
-					return 128 + int(status.Signal()), nil
-				}
-				return status.ExitStatus(), nil
-			}
-		}
-		return 1, err
+	exitCode, waitErr := exitCodeFromWait(err)
+	if waitErr != nil {
+		return exitCode, waitErr
 	}
 
-	return 0, nil
+	return exitCode, nil
+}
+
+func exitCodeFromWait(err error) (int, error) {
+	if err == nil {
+		return 0, nil
+	}
+
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+			if status.Signaled() {
+				return 128 + int(status.Signal()), nil
+			}
+			return status.ExitStatus(), nil
+		}
+	}
+
+	return 1, err
 }

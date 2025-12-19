@@ -27,6 +27,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/fatih/color"
 )
 
 func TestParseOverride(t *testing.T) {
@@ -62,11 +64,11 @@ func TestRunDryRun(t *testing.T) {
 		}
 	})
 
-	if !strings.Contains(stdout, "FOO=bar") {
-		t.Fatalf("stdout missing env output: %s", stdout)
+	if !strings.Contains(stdout, "export FOO=\"bar\"") {
+		t.Fatalf("stdout missing export output: %s", stdout)
 	}
-	if !strings.Contains(stderr, "Dry run mode") {
-		t.Fatalf("stderr missing dry run notice: %s", stderr)
+	if stderr != "" {
+		t.Fatalf("expected no stderr output, got: %s", stderr)
 	}
 }
 
@@ -75,6 +77,8 @@ func captureOutput(t *testing.T, fn func()) (string, string) {
 
 	origStdout := os.Stdout
 	origStderr := os.Stderr
+	origColorOut := color.Output
+	origColorErr := color.Error
 
 	stdoutReader, stdoutWriter, err := os.Pipe()
 	if err != nil {
@@ -87,6 +91,8 @@ func captureOutput(t *testing.T, fn func()) (string, string) {
 
 	os.Stdout = stdoutWriter
 	os.Stderr = stderrWriter
+	color.Output = stdoutWriter
+	color.Error = stderrWriter
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	var wg sync.WaitGroup
@@ -109,6 +115,8 @@ func captureOutput(t *testing.T, fn func()) (string, string) {
 
 	os.Stdout = origStdout
 	os.Stderr = origStderr
+	color.Output = origColorOut
+	color.Error = origColorErr
 
 	return stdoutBuf.String(), stderrBuf.String()
 }
