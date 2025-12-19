@@ -9,11 +9,16 @@
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge)](http://godoc.org/github.com/jcouture/nv)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jcouture/nv?style=for-the-badge)](https://https://goreportcard.com/badge/github.com/jcouture/nv)
 
-`nv` is a lightweight utility to load context specific environment variables from either a single or multiple `.env` files before executing a command or command line program, along with its parameters.
+`nv` is a lightweight utility to load context specific environment variables from `.env` files before executing a command.
 
-As of version 2, the environment is cleared-out before loading context specific variables, except for `$PATH`.
+This repo ships two binaries:
 
-**Warning**
+- `nvx` is the current, feature-rich CLI.
+- `nv` is the legacy v2-compatible CLI with the original UX.
+
+Both tools build an explicit environment and then run your command. By default, `nvx` keeps `$PATH`, `$HOME`, and `$USER`, while legacy `nv` keeps only `$PATH`.
+
+**Warning (legacy nv)**
 
 If you are using a version manager such as [asdf](https://asdf-vm.com), both variables `$HOME` and `$USER` could be required. Please see the [Troubleshooting](#troubleshooting) section for more information.
 
@@ -65,15 +70,42 @@ If `Go` is not installed, follow the instructions on the [Go website](https://go
 ```
 
 3. Build
-   `nv` uses [just](https://just.systems) as command runner for a few handy commands shortcut.
 
 ```sh
-~> just build
+~> make build
 ```
 
 While the development version is a good way to take a peek at `nv`’s latest features before they get released, be aware that it may contains bugs. Officially released versions will generally be more stable.
 
-## Usage example
+## Which binary should I use?
+
+- Use `nvx` for new projects and richer features.
+- Use `nv` if you want the v2 UX and behavior.
+
+## nvx quick start
+
+Load one or more `.env` files and run a command:
+
+```sh
+~> nvx run -e .env -- rails server -p 2808
+~> nvx run -e .env -e .env.local -- npm start
+```
+
+Cascading mode (loads `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`):
+
+```sh
+~> nvx run --cascade --env=production -- ./deploy.sh
+```
+
+Override values inline and preview the final environment:
+
+```sh
+~> nvx run -e .env -o PORT=4200 --dry-run -- ./myapp
+```
+
+By default, `nvx` preserves `$PATH`, `$HOME`, and `$USER`. Use `-p` to adjust what is kept.
+
+## nv (legacy v2) usage
 
 Create a `.env` file as follows:
 
@@ -90,15 +122,13 @@ You are then ready to use `nv` to load your context specific environment variabl
 ~> nv .env rails server -p 2808
 ```
 
-It is possible to load multiple `.env` files by separating each filenames with a comma. If a variable exists in more than one file, its value will simply be overriden as parsing goes.
+It is possible to load multiple `.env` files by separating each filename with a comma. If a variable exists in more than one file, its value will simply be overridden as parsing goes.
 
 ```sh
 ~> nv .env,.env.dev rails server -p 2808
 ```
 
 ## Supported `.env` syntax
-
-The parser accepts the same conventions as the Ruby `dotenv` gem:
 
 - `KEY=value` assignments with optional `export` prefix.
 - Full-line comments beginning with `#` and inline comments outside quotes.
@@ -107,11 +137,13 @@ The parser accepts the same conventions as the Ruby `dotenv` gem:
 - Variable interpolation in unquoted and double-quoted values using `$VAR` and `${VAR}` (earlier definitions win, then existing environment).
 - `PATH` expansions keep references to the incoming `PATH` when `$PATH`/`${PATH}` is present.
 
-## Global variables
+## Global variables (nv legacy)
 
 You might need to have global environment variables, overriding context specific ones. Create a file named `~/.nv` at the root of your home directory. It has the same format, and _will be loaded last_.
 
-## Troubleshooting
+`nvx` does not read `~/.nv`. Use `-e` for extra files or `-o KEY=value` for overrides.
+
+## Troubleshooting (legacy nv)
 
 ### Shims
 

@@ -1,7 +1,6 @@
-APP ?= nv
-
 BIN_DIR ?= bin
-BIN ?= $(BIN_DIR)/$(APP)
+BIN_NVX ?= $(BIN_DIR)/nvx
+BIN_NV ?= $(BIN_DIR)/nv
 
 GOFLAGS ?= -trimpath -buildvcs=false
 GOEXPERIMENT ?= greenteagc
@@ -13,7 +12,7 @@ export GOCACHE := $(GOCACHE_DIR)
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_DATE ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-LDFLAGS ?= -X github.com/jcouture/nv/internal/build.Version=$(VERSION) -X github.com/jcouture/nv/internal/build.GitCommit=$(COMMIT) -X github.com/jcouture/nv/internal/build.BuildDate=$(BUILD_DATE)
+LDFLAGS ?= -X github.com/jcouture/nv/internal/cli.Version=$(VERSION) -X github.com/jcouture/nv/internal/cli.Commit=$(COMMIT) -X github.com/jcouture/nv/internal/cli.BuildDate=$(BUILD_DATE) -X github.com/jcouture/nv/internal/build.Version=$(VERSION) -X github.com/jcouture/nv/internal/build.GitCommit=$(COMMIT) -X github.com/jcouture/nv/internal/build.BuildDate=$(BUILD_DATE)
 BUILD_FLAGS ?= $(strip $(if $(LDFLAGS),-ldflags "$(LDFLAGS)"))
 
 TEST_PKGS ?= ./...
@@ -26,16 +25,19 @@ TEST_PKGS ?= ./...
 test:
 	@GOEXPERIMENT=$(GOEXPERIMENT) gotestsum --format=testname -- $(TEST_PKGS)
 
-## Build the nv binary
+## Build both nvx and nv binaries
 build:
 	@mkdir -p $(BIN_DIR) $(GOCACHE_DIR)
-	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN) .
-	@echo "Built $(BIN)"
+	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN_NVX) ./cmd/nvx
+	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN_NV) ./cmd/nv
+	@echo "Built $(BIN_NVX)"
+	@echo "Built $(BIN_NV)"
 
-## Install nv to GOPATH/bin
+## Install nvx and nv to GOPATH/bin
 install:
-	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) .
-	@echo "Installed $(APP) to $$(go env GOPATH)/bin"
+	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) ./cmd/nvx
+	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) ./cmd/nv
+	@echo "Installed nvx and nv to $$(go env GOPATH)/bin"
 
 ## Format code (writes changes)
 fmt:
@@ -69,6 +71,6 @@ clean:
 
 ## Show this help message
 help:
-	@echo "$(APP) - Available targets:"
+	@echo "nv - Available targets:"
 	@echo ""
 	@awk '/^##/{help=$$0; sub(/^## */, "", help); next} /^[[:alnum:]_.-]+:/{target=$$1; sub(/:.*/, "", target); if(help){printf "  \033[36m%-18s\033[0m %s\n", target, help; help=""}}' $(MAKEFILE_LIST)
