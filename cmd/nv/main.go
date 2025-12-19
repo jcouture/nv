@@ -49,31 +49,25 @@ func main() {
 		os.Exit(0)
 	}
 
-	fn := os.Args[1]
+	filenames := strings.Split(os.Args[1], ",")
 	cmd := os.Args[2]
 	args := os.Args[2:]
 
-	filenames := strings.Split(fn, ",")
-
 	base := make(map[string]string)
-
 	for _, filename := range filenames {
 		override, err := sys.ReadVarsFromFile(filename)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			os.Exit(-1)
 		}
-		// Merge with possibly existing variables
 		base = env.Join(base, override)
 	}
 
-	globals := sys.ReadGlobalVars()
-	base = env.Join(base, globals)
+	base = env.Join(base, sys.ReadGlobalVars())
 
-	// Clearing everything out the environment... except $PATH (we’re savages)!
 	env.Clear("PATH")
 	if err := env.Setvars(base); err != nil {
-		fmt.Printf("cannot set environment: %v\n", err)
+		fmt.Printf("%s\n", err)
 		os.Exit(-1)
 	}
 
@@ -82,7 +76,7 @@ func main() {
 		bin = cmd
 	}
 
-	// #nosec G204
+	// #nosec G204 -- executing the user-specified command is the core behavior.
 	if err := syscall.Exec(bin, args, os.Environ()); err != nil {
 		fmt.Println("cannot execute:", bin)
 		os.Exit(-1)
