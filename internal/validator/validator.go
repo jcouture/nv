@@ -44,6 +44,8 @@ type Result struct {
 	EmptySchema bool
 }
 
+const maxSchemaLineSize = 1024 * 1024
+
 var requiredCommentPattern = regexp.MustCompile(`(?i)^\s*#\s*REQUIRED:\s*([A-Za-z_][A-Za-z0-9_]*)\s*$`)
 
 func Validate(schemaPath string, env map[string]string, opts Options) (Result, error) {
@@ -58,7 +60,10 @@ func Validate(schemaPath string, env map[string]string, opts Options) (Result, e
 		return result, fmt.Errorf("schema file '%s': %w", schemaPath, err)
 	}
 
-	requiredFromComments := parseRequiredComments(strings.NewReader(string(data)))
+	requiredFromComments, err := parseRequiredComments(strings.NewReader(string(data)))
+	if err != nil {
+		return result, fmt.Errorf("schema comment scan failed: %w", err)
+	}
 	schemaVars, err := parser.ParseFile(schemaPath)
 	if err != nil {
 		return result, fmt.Errorf("schema parse failed: %w", err)
@@ -104,9 +109,10 @@ func Validate(schemaPath string, env map[string]string, opts Options) (Result, e
 	return result, nil
 }
 
-func parseRequiredComments(r io.Reader) []string {
+func parseRequiredComments(r io.Reader) ([]string, error) {
 	var keys []string
 	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 0, 64*1024), maxSchemaLineSize)
 	for scanner.Scan() {
 		line := scanner.Text()
 		matches := requiredCommentPattern.FindStringSubmatch(line)
@@ -114,7 +120,10 @@ func parseRequiredComments(r io.Reader) []string {
 			keys = append(keys, matches[1])
 		}
 	}
-	return keys
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return keys, nil
 }
 
 func sortedKeysFromSet(set map[string]struct{}) []string {
