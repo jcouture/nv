@@ -123,6 +123,14 @@ Unredact or add masking rules:
 ~> nvx export -e .env --mask-pattern "(?i)token|secret"
 ```
 
+Print the current process environment (like a better `printenv`):
+
+```sh
+~> nvx print
+~> nvx print --sort
+~> nvx print --ignore-case Pat
+```
+
 Validate against a schema (default: `.env.example`):
 
 ```sh

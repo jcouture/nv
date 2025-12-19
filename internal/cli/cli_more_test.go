@@ -51,7 +51,7 @@ func TestNewRootCmdCommands(t *testing.T) {
 	for _, sub := range cmd.Commands() {
 		names[sub.Name()] = true
 	}
-	for _, name := range []string{"run", "export", "validate", "version"} {
+	for _, name := range []string{"run", "export", "print", "validate", "version"} {
 		if !names[name] {
 			t.Fatalf("expected command %q to be registered", name)
 		}
