@@ -54,7 +54,7 @@ The difference is that `nv` _feeds_ an explicit environment to the process it st
 
 Alternatively, you can build it from source.
 
-1. Verify you have Go 1.20+ installed
+1. Verify you have Go 1.25+ installed
 
 ```sh
 ~> go version
@@ -69,7 +69,13 @@ If `Go` is not installed, follow the instructions on the [Go website](https://go
 ~> cd nv
 ```
 
-3. Build
+3. Install build dependencies (using [mise-en-place](https://mise.jdx.dev/))
+
+```sh
+~> mise install
+```
+
+4. Build
 
 ```sh
 ~> make build
@@ -82,9 +88,9 @@ While the development version is a good way to take a peek at `nv`’s latest fe
 - Use `nvx` for new projects and richer features.
 - Use `nv` if you want the v2 UX and behavior.
 
-## nvx quick start
+## nvx manual
 
-Load one or more `.env` files and run a command:
+Run a command with one or more `.env` files:
 
 ```sh
 ~> nvx run -e .env -- rails server -p 2808
@@ -97,34 +103,49 @@ Cascading mode (loads `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`):
 ~> nvx run --cascade --env=production -- ./deploy.sh
 ```
 
-Override values inline and preview the final environment:
+Inline overrides and strict interpolation:
 
 ```sh
-~> nvx run -e .env -o PORT=4200 --dry-run -- ./myapp
+~> nvx run -e .env -o PORT=4200 --strict -- ./myapp
+```
+
+Preview or export the compiled environment (masked by default):
+
+```sh
+~> nvx run -e .env --dry-run -- ./myapp
+~> nvx export -e .env --format=json
+```
+
+Unredact or add masking rules:
+
+```sh
+~> nvx export -e .env --unredacted
+~> nvx export -e .env --mask-pattern "(?i)token|secret"
+```
+
+Validate against a schema (default: `.env.example`):
+
+```sh
+~> nvx validate -e .env
+~> nvx validate -e .env --schema .env.production.example --schema-strict
+```
+
+Schema example:
+
+```
+DATABASE_URL=postgres://localhost
+OPTIONAL=
+# REQUIRED: API_KEY
 ```
 
 By default, `nvx` preserves `$PATH`, `$HOME`, and `$USER`. Use `-p` to adjust what is kept.
 
 ## nv (legacy v2) usage
 
-Create a `.env` file as follows:
-
-```
-PORT=4200
-SECRET_KEY_BASE=3b4476c0f6793b575050a1241438c32de8cbd3b7dec67910369657e1c4c41785
-# Comments are supported
-DATABASE_URL=postgres://dbuser:@localhost:5432/playground_dev?pool=10
-```
-
-You are then ready to use `nv` to load your context specific environment variables.
+Run a command with one or more `.env` files:
 
 ```sh
 ~> nv .env rails server -p 2808
-```
-
-It is possible to load multiple `.env` files by separating each filename with a comma. If a variable exists in more than one file, its value will simply be overridden as parsing goes.
-
-```sh
 ~> nv .env,.env.dev rails server -p 2808
 ```
 
@@ -139,52 +160,16 @@ It is possible to load multiple `.env` files by separating each filename with a 
 
 ## Global variables (nv legacy)
 
-You might need to have global environment variables, overriding context specific ones. Create a file named `~/.nv` at the root of your home directory. It has the same format, and _will be loaded last_.
-
-`nvx` does not read `~/.nv`. Use `-e` for extra files or `-o KEY=value` for overrides.
+For machine-wide overrides, create `~/.nv` (loaded last). `nvx` *does not* read `~/.nv`; use `-e` or `-o` instead.
 
 ## Troubleshooting (legacy nv)
 
-### Shims
-
-If after executing a command with `nv`, such as:
-
-```sh
-~> nv .env rails --version
-```
-
-you get the following error:
-
-```sh
-unknown command: rails. Perhaps you have to reshim?
-```
-
-add the following to your `~/.nv` file:
+If you rely on shims or TTY tools, add these to `~/.nv`:
 
 ```
 HOME=<your home directory>
 USER=<your username>
-```
-
-### Interactive TTY
-
-If after executing a command with `nv`, such as:
-
-```sh
-~> nv .env less README.md
-```
-
-you get a similar error or warning:
-
-```
-WARNING: terminal is not fully functional
--  (press RETURN)
-```
-
-add the following to your `~/.nv` file:
-
-```
-TERM=xterm-color # or any other relevant value for `TERM`
+TERM=xterm-color
 ```
 
 ## License
