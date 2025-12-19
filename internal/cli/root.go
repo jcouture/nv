@@ -31,6 +31,7 @@ var (
 	Version   = "dev"
 	Commit    = "none"
 	BuildDate = "unknown"
+	exitFunc  = os.Exit
 )
 
 type exitError struct {
@@ -45,6 +46,7 @@ func NewRootCmd(name string) *cobra.Command {
 	if name == "" {
 		name = "nvx"
 	}
+	var noColor bool
 	rootCmd := &cobra.Command{
 		Use:           name,
 		Short:         "Environment variable manager",
@@ -54,9 +56,15 @@ func NewRootCmd(name string) *cobra.Command {
 	}
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable colored output")
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		configureColors(noColor)
+	}
 
 	rootCmd.AddCommand(
 		newRunCmd(),
+		newExportCmd(),
+		newValidateCmd(),
 		newVersionCmd(),
 	)
 
@@ -65,11 +73,19 @@ func NewRootCmd(name string) *cobra.Command {
 
 func Execute() {
 	name := os.Getenv("NVX_COMMAND_NAME")
+	exitCode := executeCommand(name)
+	if exitCode != 0 {
+		exitFunc(exitCode)
+	}
+}
+
+func executeCommand(name string) int {
 	if err := NewRootCmd(name).Execute(); err != nil {
 		if exitErr, ok := err.(exitError); ok {
-			os.Exit(exitErr.code)
+			return exitErr.code
 		}
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }

@@ -20,7 +20,60 @@
 
 package cli
 
-const (
-	defaultEnvFile    = ".env"
-	defaultSchemaFile = ".env.example"
+import (
+	"fmt"
+
+	"github.com/jcouture/nv/internal/loader"
 )
+
+type envOptions struct {
+	envFiles  []string
+	cascade   bool
+	env       string
+	overrides []string
+	strict    bool
+	preserve  []string
+}
+
+func loadEnvironment(opts envOptions) (map[string]string, error) {
+	loaderOpts := []loader.Option{
+		loader.WithPreserve(opts.preserve),
+		loader.WithStrict(opts.strict),
+	}
+
+	l := loader.New(loaderOpts...)
+
+	var env map[string]string
+	var err error
+
+	if opts.cascade {
+		env, err = l.LoadCascade(opts.env)
+	} else {
+		env, err = l.LoadFiles(opts.envFiles...)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to load environment: %w", err)
+	}
+
+	for _, override := range opts.overrides {
+		key, value, err := parseOverride(override)
+		if err != nil {
+			return nil, fmt.Errorf("invalid override %q: %w", override, err)
+		}
+		env[key] = value
+	}
+
+	return env, nil
+}
+
+func parseOverride(s string) (string, string, error) {
+	for i, c := range s {
+		if c == '=' {
+			if i == 0 {
+				return "", "", fmt.Errorf("missing key")
+			}
+			return s[:i], s[i+1:], nil
+		}
+	}
+	return "", "", fmt.Errorf("missing '=' in override")
+}

@@ -1,3 +1,5 @@
+//go:build windows
+
 // Copyright 2015-2025 Jean-Philippe Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,9 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cli
+package exec
 
-const (
-	defaultEnvFile    = ".env"
-	defaultSchemaFile = ".env.example"
+import (
+	"os"
+	"os/exec"
 )
+
+func setProcessGroup(cmd *exec.Cmd) {
+}
+
+func forwardSignal(cmd *exec.Cmd, sig os.Signal) {
+	if cmd.Process == nil {
+		return
+	}
+	_ = cmd.Process.Signal(sig)
+}

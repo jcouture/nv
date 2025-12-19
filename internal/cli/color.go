@@ -20,7 +20,22 @@
 
 package cli
 
-const (
-	defaultEnvFile    = ".env"
-	defaultSchemaFile = ".env.example"
+import (
+	"os"
+
+	"github.com/fatih/color"
+	"github.com/mattn/go-isatty"
 )
+
+func configureColors(noColor bool) {
+	if _, ok := os.LookupEnv("NO_COLOR"); ok {
+		noColor = true
+	}
+
+	isTTY := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsTerminal(os.Stderr.Fd())
+	if !isTTY {
+		noColor = true
+	}
+
+	color.NoColor = noColor
+}

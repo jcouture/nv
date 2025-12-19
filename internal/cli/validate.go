@@ -21,42 +21,43 @@
 package cli
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
-	"github.com/jcouture/nv/internal/exec"
-	"github.com/jcouture/nv/internal/exporter"
+	"github.com/fatih/color"
+	"github.com/jcouture/nv/internal/validator"
 	"github.com/spf13/cobra"
 )
 
-type runOptions struct {
+type validateOptions struct {
 	envFiles     []string
 	cascade      bool
 	env          string
 	overrides    []string
 	strict       bool
 	preserve     []string
-	dryRun       bool
-	validate     bool
 	schemaFile   string
 	schemaStrict bool
-	format       string
-	unredacted   bool
-	maskPatterns []string
+	verbose      bool
 }
 
-func newRunCmd() *cobra.Command {
-	opts := &runOptions{}
+type validationOptions struct {
+	schemaFile string
+	strict     bool
+	verbose    bool
+	envFiles   []string
+}
+
+func newValidateCmd() *cobra.Command {
+	opts := &validateOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "run [flags] -- <command> [args...]",
-		Short: "Execute a command with loaded environment",
-		Long:  "Load environment variables from .env files and execute the specified command.",
-		Example: `  nvx run -e .env -- ./myapp
-  nvx run -e .env -e .env.local -- npm start
-  nvx run --cascade --env=production -- ./deploy.sh`,
-		Args: cobra.MinimumNArgs(1),
+		Use:   "validate [flags]",
+		Short: "Validate environment variables against a schema",
+		Long:  "Load environment variables from .env files and validate them against a schema file.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRun(opts, args)
+			return runValidate(opts)
 		},
 	}
 
@@ -67,19 +68,15 @@ func newRunCmd() *cobra.Command {
 	flags.StringSliceVarP(&opts.overrides, "override", "o", nil, "Inline overrides (KEY=value)")
 	flags.BoolVar(&opts.strict, "strict", false, "Fail on unresolved interpolation")
 	flags.StringSliceVarP(&opts.preserve, "preserve", "p", []string{"PATH", "HOME", "USER"}, "System variables to preserve")
-	flags.BoolVar(&opts.dryRun, "dry-run", false, "Print environment without executing")
-	flags.BoolVar(&opts.validate, "validate", false, "Validate environment variables before execution")
 	flags.StringVar(&opts.schemaFile, "schema", defaultSchemaFile, "Schema file to validate against")
 	flags.StringVar(&opts.schemaFile, "schema-file", defaultSchemaFile, "Schema file to validate against")
 	flags.BoolVar(&opts.schemaStrict, "schema-strict", false, "Warn on environment variables not present in schema")
-	flags.StringVar(&opts.format, "format", exporter.FormatShell, "Export format for dry run (shell or json)")
-	flags.BoolVar(&opts.unredacted, "unredacted", false, "Show unredacted values in dry run output")
-	flags.StringSliceVar(&opts.maskPatterns, "mask-pattern", nil, "Additional regex patterns to mask by value")
+	flags.BoolVarP(&opts.verbose, "verbose", "v", false, "Show validation success details")
 
 	return cmd
 }
 
-func runRun(opts *runOptions, args []string) error {
+func runValidate(opts *validateOptions) error {
 	env, err := loadEnvironment(envOptions{
 		envFiles:  opts.envFiles,
 		cascade:   opts.cascade,
@@ -92,29 +89,70 @@ func runRun(opts *runOptions, args []string) error {
 		return err
 	}
 
-	if opts.validate {
-		if err := validateEnvironment(env, validationOptions{
-			schemaFile: opts.schemaFile,
-			strict:     opts.schemaStrict,
-			envFiles:   opts.envFiles,
-		}); err != nil {
-			return err
+	return validateEnvironment(env, validationOptions{
+		schemaFile: opts.schemaFile,
+		strict:     opts.schemaStrict,
+		verbose:    opts.verbose,
+		envFiles:   opts.envFiles,
+	})
+}
+
+func validateEnvironment(env map[string]string, opts validationOptions) error {
+	result, err := validator.Validate(opts.schemaFile, env, validator.Options{Strict: opts.strict})
+	if err != nil {
+		_, _ = color.New(color.FgRed).Fprintf(os.Stderr, "Validation failed: %s\n", err)
+		return exitError{code: 1}
+	}
+
+	if result.EmptySchema {
+		_, _ = color.New(color.FgYellow).Fprintf(os.Stderr, "Validation skipped: schema file is empty (%s)\n", result.SchemaPath)
+	}
+
+	if hasCircularSchema(opts.envFiles, result.SchemaPath) {
+		_, _ = color.New(color.FgYellow).Fprintf(os.Stderr, "Validation warning: schema file matches an env file (%s)\n", result.SchemaPath)
+	}
+
+	if len(result.Missing) > 0 {
+		_, _ = color.New(color.FgRed).Fprintln(os.Stderr, "Validation failed: Missing required environment variables:")
+		for _, key := range result.Missing {
+			fmt.Fprintf(os.Stderr, "  - %s (defined in %s)\n", key, result.SchemaPath)
+		}
+		return exitError{code: 1}
+	}
+
+	if opts.strict && len(result.Extra) > 0 {
+		_, _ = color.New(color.FgYellow).Fprintln(os.Stderr, "Validation warning: Environment variables not present in schema:")
+		for _, key := range result.Extra {
+			fmt.Fprintf(os.Stderr, "  - %s\n", key)
 		}
 	}
 
-	if opts.dryRun {
-		return exporter.Write(os.Stdout, env, exporter.Options{
-			Format:       opts.format,
-			Unredacted:   opts.unredacted,
-			MaskPatterns: opts.maskPatterns,
-		})
+	if opts.verbose {
+		color.Green("Validation passed")
 	}
 
-	runner := exec.NewRunner(env, args[0], args[1:])
-	exitCode, err := runner.Run()
+	return nil
+}
+
+func hasCircularSchema(envFiles []string, schemaPath string) bool {
+	if schemaPath == "" || len(envFiles) == 0 {
+		return false
+	}
+
+	schemaAbs, err := filepath.Abs(schemaPath)
 	if err != nil {
-		return err
+		schemaAbs = filepath.Clean(schemaPath)
 	}
 
-	return exitError{code: exitCode}
+	for _, file := range envFiles {
+		fileAbs, err := filepath.Abs(file)
+		if err != nil {
+			fileAbs = filepath.Clean(file)
+		}
+		if fileAbs == schemaAbs {
+			return true
+		}
+	}
+
+	return false
 }

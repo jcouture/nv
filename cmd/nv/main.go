@@ -32,33 +32,44 @@ import (
 	"github.com/jcouture/nv/pkg/env"
 )
 
+var (
+	exitFunc     = os.Exit
+	execFunc     = syscall.Exec
+	lookPathFunc = exec.LookPath
+	setvarsFunc  = env.Setvars
+)
+
 func main() {
-	if len(os.Args) == 2 {
-		cmd := os.Args[1]
+	exitFunc(run(os.Args))
+}
+
+func run(args []string) int {
+	if len(args) == 2 {
+		cmd := args[1]
 		switch cmd {
 		case "-v", "version", "-version", "--version":
 			printVersion()
 		default:
 			printHelp()
 		}
-		os.Exit(0)
+		return 0
 	}
 
-	if len(os.Args) < 3 {
+	if len(args) < 3 {
 		printHelp()
-		os.Exit(0)
+		return 0
 	}
 
-	filenames := strings.Split(os.Args[1], ",")
-	cmd := os.Args[2]
-	args := os.Args[2:]
+	filenames := strings.Split(args[1], ",")
+	cmd := args[2]
+	cmdArgs := args[2:]
 
 	base := make(map[string]string)
 	for _, filename := range filenames {
 		override, err := sys.ReadVarsFromFile(filename)
 		if err != nil {
 			fmt.Printf("%s\n", err)
-			os.Exit(-1)
+			return -1
 		}
 		base = env.Join(base, override)
 	}
@@ -66,21 +77,22 @@ func main() {
 	base = env.Join(base, sys.ReadGlobalVars())
 
 	env.Clear("PATH")
-	if err := env.Setvars(base); err != nil {
+	if err := setvarsFunc(base); err != nil {
 		fmt.Printf("%s\n", err)
-		os.Exit(-1)
+		return -1
 	}
 
-	bin, err := exec.LookPath(cmd)
+	bin, err := lookPathFunc(cmd)
 	if err != nil {
 		bin = cmd
 	}
 
 	// #nosec G204 -- executing the user-specified command is the core behavior.
-	if err := syscall.Exec(bin, args, os.Environ()); err != nil {
+	if err := execFunc(bin, cmdArgs, os.Environ()); err != nil {
 		fmt.Println("cannot execute:", bin)
-		os.Exit(-1)
+		return -1
 	}
+	return 0
 }
 
 func printHelp() {

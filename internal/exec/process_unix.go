@@ -1,3 +1,5 @@
+//go:build !windows
+
 // Copyright 2015-2025 Jean-Philippe Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,9 +20,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cli
+package exec
 
-const (
-	defaultEnvFile    = ".env"
-	defaultSchemaFile = ".env.example"
+import (
+	"os"
+	"os/exec"
+	"syscall"
 )
+
+func setProcessGroup(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+}
+
+func forwardSignal(cmd *exec.Cmd, sig os.Signal) {
+	if cmd.Process == nil {
+		return
+	}
+	if signal, ok := sig.(syscall.Signal); ok {
+		_ = syscall.Kill(-cmd.Process.Pid, signal)
+		return
+	}
+	_ = cmd.Process.Signal(sig)
+}

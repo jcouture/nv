@@ -18,9 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cli
+package main
 
-const (
-	defaultEnvFile    = ".env"
-	defaultSchemaFile = ".env.example"
+import (
+	"os"
+	"testing"
 )
+
+func TestMainVersion(t *testing.T) {
+	origArgs := os.Args
+	t.Cleanup(func() {
+		os.Args = origArgs
+	})
+
+	os.Args = []string{"nvx", "version", "--format", "text"}
+	main()
+}
