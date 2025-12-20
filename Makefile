@@ -11,13 +11,14 @@ export GOCACHE := $(GOCACHE_DIR)
 # Version information
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-BUILD_DATE ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-LDFLAGS ?= -X github.com/jcouture/nv/internal/cli.Version=$(VERSION) -X github.com/jcouture/nv/internal/cli.Commit=$(COMMIT) -X github.com/jcouture/nv/internal/cli.BuildDate=$(BUILD_DATE) -X github.com/jcouture/nv/internal/build.Version=$(VERSION) -X github.com/jcouture/nv/internal/build.GitCommit=$(COMMIT) -X github.com/jcouture/nv/internal/build.BuildDate=$(BUILD_DATE)
+LDFLAGS ?= -X github.com/jcouture/nv/internal/cli.Version=$(VERSION) -X github.com/jcouture/nv/internal/cli.Commit=$(COMMIT) -X github.com/jcouture/nv/internal/build.Version=$(VERSION) -X github.com/jcouture/nv/internal/build.GitCommit=$(COMMIT)
 BUILD_FLAGS ?= $(strip $(if $(LDFLAGS),-ldflags "$(LDFLAGS)"))
 
 TEST_PKGS ?= ./...
+FUZZ_PKGS ?= ./...
+FUZZTIME ?= 30s
 
-.PHONY: build clean help fmt vet gosec tidy precommit test install
+.PHONY: build clean help fmt vet gosec tidy precommit test install fuzz coverage
 
 .DEFAULT_GOAL := help
 
@@ -31,6 +32,19 @@ test:
 coverage: test
 	@go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
+
+## Run fuzz tests
+fuzz:
+	@for pkg in $$(go list $(FUZZ_PKGS)); do \
+		fuzzes=$$(go test $$pkg -list '^Fuzz' 2>/dev/null | rg '^Fuzz'); \
+		if [ -z "$$fuzzes" ]; then \
+			continue; \
+		fi; \
+		for fuzz in $$fuzzes; do \
+			echo "Fuzzing $$pkg ($$fuzz)"; \
+			go test $$pkg -run=^$$ -fuzz=$$fuzz -fuzztime=$(FUZZTIME); \
+		done; \
+	done
 
 ## Build both nvx and nv binaries
 build:
