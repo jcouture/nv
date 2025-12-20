@@ -1,0 +1,27 @@
+[general]
+auto_validate = true
+warn_on_missing = false
+verbosity = 2
+
+[defaults]
+env_file = ".env.prod"
+auto_local = false
+cascade = false
+dry_run = true
+
+[validation]
+enabled = true
+schema_file = ".env.schema"
+strict = false
+allow_extra = false
+
+[paths]
+detect_path_modifications = false
+path_strategy = "append"
+
+[globals]
+priority = "last"
+
+  [globals.env]
+  AWS_REGION = "us-east-1"
+  EDITOR = "vim"

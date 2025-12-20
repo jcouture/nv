@@ -18,56 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package config
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
+func TestSaveToPathNilGlobalsEnv(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := Default()
+	cfg.Globals.Env = nil
+	if err := cfg.SaveToPath(path); err != nil {
+		t.Fatalf("SaveToPath error: %v", err)
 	}
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("expected config file to exist: %v", err)
 	}
-
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
-}
-
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
-
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
-
-	if env == nil {
-		env = l.preservedEnv()
-	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
 }

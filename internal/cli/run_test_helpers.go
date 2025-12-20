@@ -18,56 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package cli
 
-import "os"
+import (
+	"testing"
 
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
+	"github.com/spf13/cobra"
+)
+
+func newRunCmdForTest(t *testing.T, changed map[string]string) *cobra.Command {
+	t.Helper()
+
+	cmd := &cobra.Command{}
+	flags := cmd.Flags()
+	flags.StringSlice("env-file", nil, "")
+	flags.Bool("cascade", false, "")
+	flags.Bool("dry-run", false, "")
+	flags.Bool("validate", false, "")
+	flags.String("schema", "", "")
+	flags.String("schema-file", "", "")
+	flags.Bool("schema-strict", false, "")
+
+	for key, value := range changed {
+		if err := flags.Set(key, value); err != nil {
+			t.Fatalf("set flag %s: %v", key, err)
 		}
 	}
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
-
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
-}
-
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
-
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
-
-	if env == nil {
-		env = l.preservedEnv()
-	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+	return cmd
 }

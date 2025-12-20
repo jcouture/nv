@@ -23,7 +23,14 @@ TEST_PKGS ?= ./...
 
 ## Run unit tests
 test:
-	@GOEXPERIMENT=$(GOEXPERIMENT) gotestsum --format=testname -- $(TEST_PKGS)
+	@echo "Running tests with coverage..."
+	@go test -race -coverprofile=coverage.out -covermode=atomic ./...
+	@go tool cover -func=coverage.out | grep total | awk '{print "Total coverage: " $$3}'
+
+.PHONY: coverage
+coverage: test
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
 
 ## Build both nvx and nv binaries
 build:

@@ -176,3 +176,12 @@ func TestSetvars(t *testing.T) {
 		}
 	}
 }
+
+func TestSetvarsInvalidKey(t *testing.T) {
+	snapshot := Getvars()
+	defer restoreEnv(t, snapshot)
+
+	if err := Setvars(map[string]string{"BAD=KEY": "1"}); err == nil {
+		t.Fatal("expected error for invalid key")
+	}
+}

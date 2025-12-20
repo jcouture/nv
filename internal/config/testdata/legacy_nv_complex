@@ -1,0 +1,5 @@
+# comment
+FOO="bar baz"
+QUOTED='value with spaces'
+ESCAPED="hello\\nworld"
+FROM_ENV=${NV_TEST}

@@ -23,6 +23,7 @@ package exporter
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
@@ -131,6 +132,48 @@ func TestWriteShellUnredacted(t *testing.T) {
 	}
 }
 
+func TestWriteDefaultsToShellFormat(t *testing.T) {
+	origNoColor := color.NoColor
+	t.Cleanup(func() { color.NoColor = origNoColor })
+	color.NoColor = true
+
+	env := map[string]string{
+		"FOO": "bar",
+	}
+	var buf bytes.Buffer
+	if err := Write(&buf, env, Options{}); err != nil {
+		t.Fatalf("write default format: %v", err)
+	}
+	if !strings.Contains(buf.String(), "export FOO=\"bar\"") {
+		t.Fatalf("expected shell output, got: %s", buf.String())
+	}
+}
+
+func TestWriteShellReturnsWriteError(t *testing.T) {
+	writerErr := errWriter{err: errWriterSentinel}
+	err := Write(&writerErr, map[string]string{"FOO": "bar"}, Options{Format: FormatShell})
+	if err == nil {
+		t.Fatal("expected write error")
+	}
+}
+
+func TestWriteShellMaskedWithColor(t *testing.T) {
+	origNoColor := color.NoColor
+	t.Cleanup(func() { color.NoColor = origNoColor })
+	color.NoColor = false
+
+	env := map[string]string{
+		"API_KEY": "secret",
+	}
+	var buf bytes.Buffer
+	if err := Write(&buf, env, Options{Format: FormatShell}); err != nil {
+		t.Fatalf("write shell: %v", err)
+	}
+	if !strings.Contains(buf.String(), redactedValue) {
+		t.Fatalf("expected masked output, got: %s", buf.String())
+	}
+}
+
 func TestEscapeShellValue(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -167,4 +210,14 @@ func TestEscapeShellValue(t *testing.T) {
 			}
 		})
 	}
+}
+
+var errWriterSentinel = errors.New("write failed")
+
+type errWriter struct {
+	err error
+}
+
+func (w *errWriter) Write(p []byte) (int, error) {
+	return 0, w.err
 }

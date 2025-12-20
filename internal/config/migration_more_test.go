@@ -18,56 +18,57 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package config
 
-import "os"
+import (
+	"path/filepath"
+	"testing"
 
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+	"github.com/adrg/xdg"
+	"github.com/stretchr/testify/require"
+)
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
+func TestMigrateNonInteractiveNoLegacy(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+	require.NoError(t, MigrateNonInteractive())
 }
 
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+func TestBackupLegacyEnvMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
+	err := BackupLegacyEnv()
+	require.Error(t, err)
+}
 
-	if env == nil {
-		env = l.preservedEnv()
-	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+func TestDeleteLegacyEnvMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	err := DeleteLegacyEnv()
+	require.Error(t, err)
+}
+
+func TestPromptMigrationConfigHomeError(t *testing.T) {
+	orig := xdg.ConfigHome
+	t.Cleanup(func() { xdg.ConfigHome = orig })
+
+	xdg.ConfigHome = ""
+	_, err := PromptMigration()
+	require.Error(t, err)
+}
+
+func TestMigrateLegacyEnvConfigHomeError(t *testing.T) {
+	orig := xdg.ConfigHome
+	t.Cleanup(func() { xdg.ConfigHome = orig })
+
+	xdg.ConfigHome = ""
+	_, err := MigrateLegacyEnv()
+	require.Error(t, err)
 }

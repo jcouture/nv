@@ -1,0 +1,6 @@
+[globals]
+priority = "first"
+
+  [globals.env]
+  AWS_REGION = "us-east-1"
+  DATABASE_URL = "postgres://localhost/db"

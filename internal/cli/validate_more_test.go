@@ -18,56 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package cli
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
+func TestHasCircularSchemaTrue(t *testing.T) {
+	tmpDir := t.TempDir()
+	schema := filepath.Join(tmpDir, ".env")
+	if err := os.WriteFile(schema, []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write schema: %v", err)
 	}
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
+	if !hasCircularSchema([]string{schema}, schema) {
+		t.Fatalf("expected circular schema")
 	}
-
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
-}
-
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
-
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
-
-	if env == nil {
-		env = l.preservedEnv()
-	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
 }

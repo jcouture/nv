@@ -3,10 +3,11 @@ module github.com/jcouture/nv
 go 1.25.5
 
 require (
+	github.com/BurntSushi/toml v1.4.0
+	github.com/adrg/xdg v0.4.0
 	github.com/fatih/color v1.17.0
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/mattn/go-isatty v0.0.20
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 )

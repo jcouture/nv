@@ -18,56 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package config
 
-import "os"
+import (
+	"testing"
 
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+	"github.com/stretchr/testify/require"
+)
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
-
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+func TestDefaultValues(t *testing.T) {
+	cfg := Default()
+	require.True(t, cfg.General.WarnOnMissing)
+	require.Equal(t, 1, cfg.General.Verbosity)
+	require.Equal(t, ".env", cfg.Defaults.EnvFile)
+	require.True(t, cfg.Defaults.Cascade)
+	require.Equal(t, ".env.example", cfg.Validation.SchemaFile)
+	require.Equal(t, PathStrategyPrepend, cfg.Paths.PathStrategy)
+	require.Equal(t, GlobalsPriorityFirst, cfg.Globals.Priority)
 }
 
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+func TestDefaultConfigIsValid(t *testing.T) {
+	cfg := Default()
+	errs := cfg.Validate()
+	require.Empty(t, errs)
+}
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
+func TestDefaultGlobalsEmpty(t *testing.T) {
+	globals := DefaultGlobals()
+	require.Empty(t, globals.Env)
+}
 
-	if env == nil {
-		env = l.preservedEnv()
-	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+func TestDefaultsImmutable(t *testing.T) {
+	cfg := Default()
+	cfg.Globals.Env["NEW"] = "value"
+
+	cfg2 := Default()
+	_, ok := cfg2.Globals.Env["NEW"]
+	require.False(t, ok)
 }
