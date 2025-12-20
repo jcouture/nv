@@ -161,6 +161,12 @@ func (l *Lexer) NextToken() Token {
 			l.readingValue = false
 		} else {
 			lit := l.readIdentifier()
+			if lit == "" {
+				tok.Type = TokenValue
+				tok.Literal = string(l.ch)
+				l.readChar()
+				return tok
+			}
 			switch lit {
 			case "export":
 				tok.Type = TokenExport
