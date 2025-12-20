@@ -1,0 +1,12 @@
+[general]
+verbosity = 5
+
+[paths]
+path_strategy = "sideways"
+
+[globals]
+priority = "middle"
+
+  [globals.env]
+  "BAD=KEY" = "value"
+  "WITH SPACE" = "oops"

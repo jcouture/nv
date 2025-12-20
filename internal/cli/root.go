@@ -66,6 +66,7 @@ func NewRootCmd(name string) *cobra.Command {
 		newExportCmd(),
 		newPrintCmd(),
 		newValidateCmd(),
+		newConfigCmd(),
 		newVersionCmd(),
 	)
 

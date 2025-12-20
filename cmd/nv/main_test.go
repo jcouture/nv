@@ -43,6 +43,18 @@ func TestRunHelpAndVersion(t *testing.T) {
 			wantCode: 0,
 		},
 		{
+			name:     "short version flag",
+			args:     []string{"nv", "-v"},
+			contains: "nv version",
+			wantCode: 0,
+		},
+		{
+			name:     "long version flag",
+			args:     []string{"nv", "--version"},
+			contains: "nv version",
+			wantCode: 0,
+		},
+		{
 			name:     "help for short args",
 			args:     []string{"nv"},
 			contains: "usage: nv",

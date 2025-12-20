@@ -18,56 +18,54 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package config
 
-import "os"
-
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
+func Default() *Config {
+	return &Config{
+		General:    DefaultGeneral(),
+		Defaults:   DefaultDefaults(),
+		Validation: DefaultValidation(),
+		Paths:      DefaultPaths(),
+		Globals:    DefaultGlobals(),
 	}
-
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
-
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
 }
 
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
+func DefaultGeneral() GeneralConfig {
+	return GeneralConfig{
+		AutoValidate:  false,
+		WarnOnMissing: true,
+		Verbosity:     1,
 	}
+}
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
+func DefaultDefaults() DefaultsConfig {
+	return DefaultsConfig{
+		EnvFile:   ".env",
+		AutoLocal: true,
+		Cascade:   true,
+		DryRun:    false,
 	}
+}
 
-	if env == nil {
-		env = l.preservedEnv()
+func DefaultValidation() ValidationConfig {
+	return ValidationConfig{
+		Enabled:    false,
+		SchemaFile: ".env.example",
+		Strict:     true,
+		AllowExtra: true,
 	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
+}
+
+func DefaultPaths() PathsConfig {
+	return PathsConfig{
+		DetectPathModifications: true,
+		PathStrategy:            PathStrategyPrepend,
 	}
-	return env, nil
+}
+
+func DefaultGlobals() GlobalsConfig {
+	return GlobalsConfig{
+		Priority: GlobalsPriorityFirst,
+		Env:      map[string]string{},
+	}
 }

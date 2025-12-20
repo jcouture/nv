@@ -29,6 +29,7 @@ func TestIsSecretKey(t *testing.T) {
 		"JWT_TOKEN":         true,
 		"AWS_ACCESS_KEY_ID": true,
 		"GITHUB_API_TOKEN":  true,
+		"AUTH_TOKEN":        true,
 		"PRIVATE_KEY":       true,
 		"DB_CREDENTIALS":    true,
 		"PUBLIC_KEY":        false,

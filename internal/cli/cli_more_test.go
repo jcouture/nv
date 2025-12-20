@@ -29,7 +29,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/adrg/xdg"
 	"github.com/fatih/color"
+	"github.com/jcouture/nv/internal/config"
 )
 
 func TestConfigureColors(t *testing.T) {
@@ -377,6 +379,9 @@ func TestValidateEnvironmentVerbose(t *testing.T) {
 
 func TestRunRunExitCode(t *testing.T) {
 	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)
@@ -387,7 +392,11 @@ func TestRunRunExitCode(t *testing.T) {
 		envFiles: []string{envFile},
 	}
 
-	err := runRun(opts, append([]string{cmd}, args...))
+	cmdFlags := newRunCmdForTest(t, map[string]string{
+		"env-file": envFile,
+		"cascade":  "false",
+	})
+	err := runRun(cmdFlags, opts, append([]string{cmd}, args...))
 	exitErr, ok := err.(exitError)
 	if !ok {
 		t.Fatalf("expected exitError, got %T", err)
@@ -399,6 +408,9 @@ func TestRunRunExitCode(t *testing.T) {
 
 func TestRunRunValidateDryRun(t *testing.T) {
 	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 	envFile := filepath.Join(tmpDir, ".env")
 	schemaFile := filepath.Join(tmpDir, ".env.example")
 
@@ -418,7 +430,14 @@ func TestRunRunValidateDryRun(t *testing.T) {
 	}
 
 	stdout, _ := captureOutput(t, func() {
-		if err := runRun(opts, []string{"echo", "ok"}); err != nil {
+		cmdFlags := newRunCmdForTest(t, map[string]string{
+			"env-file":    envFile,
+			"cascade":     "false",
+			"dry-run":     "true",
+			"validate":    "true",
+			"schema-file": schemaFile,
+		})
+		if err := runRun(cmdFlags, opts, []string{"echo", "ok"}); err != nil {
 			t.Fatalf("runRun error: %v", err)
 		}
 	})
@@ -430,6 +449,9 @@ func TestRunRunValidateDryRun(t *testing.T) {
 
 func TestRunRunValidateMissingSchema(t *testing.T) {
 	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)
@@ -441,14 +463,63 @@ func TestRunRunValidateMissingSchema(t *testing.T) {
 		schemaFile: filepath.Join(tmpDir, "missing.env.example"),
 	}
 
-	err := runRun(opts, []string{"echo", "ok"})
+	cmdFlags := newRunCmdForTest(t, map[string]string{
+		"env-file": envFile,
+		"cascade":  "false",
+		"validate": "true",
+	})
+	err := runRun(cmdFlags, opts, []string{"echo", "ok"})
 	if err == nil {
 		t.Fatal("expected error for missing schema file")
 	}
 }
 
+func TestRunRunRespectsSchemaFlags(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
+	envFile := filepath.Join(tmpDir, ".env")
+	schemaFile := filepath.Join(tmpDir, ".env.schema")
+	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+	if err := os.WriteFile(schemaFile, []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write schema file: %v", err)
+	}
+
+	opts := &runOptions{
+		envFiles:   []string{envFile},
+		dryRun:     true,
+		validate:   true,
+		schemaFile: schemaFile,
+		format:     "shell",
+	}
+
+	stdout, _ := captureOutput(t, func() {
+		cmdFlags := newRunCmdForTest(t, map[string]string{
+			"env-file":      envFile,
+			"dry-run":       "true",
+			"validate":      "true",
+			"schema-file":   schemaFile,
+			"schema-strict": "true",
+			"cascade":       "false",
+		})
+		if err := runRun(cmdFlags, opts, []string{"echo", "ok"}); err != nil {
+			t.Fatalf("runRun error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "export FOO=\"bar\"") {
+		t.Fatalf("unexpected output: %s", stdout)
+	}
+}
+
 func TestRunRunInvalidFormat(t *testing.T) {
 	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)
@@ -460,7 +531,12 @@ func TestRunRunInvalidFormat(t *testing.T) {
 		format:   "nope",
 	}
 
-	err := runRun(opts, []string{"echo", "ok"})
+	cmdFlags := newRunCmdForTest(t, map[string]string{
+		"env-file": envFile,
+		"cascade":  "false",
+		"dry-run":  "true",
+	})
+	err := runRun(cmdFlags, opts, []string{"echo", "ok"})
 	if err == nil {
 		t.Fatal("expected error for invalid format")
 	}
@@ -468,6 +544,9 @@ func TestRunRunInvalidFormat(t *testing.T) {
 
 func TestRunRunMissingCommand(t *testing.T) {
 	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)
@@ -477,7 +556,11 @@ func TestRunRunMissingCommand(t *testing.T) {
 		envFiles: []string{envFile},
 	}
 
-	err := runRun(opts, []string{"does-not-exist"})
+	cmdFlags := newRunCmdForTest(t, map[string]string{
+		"env-file": envFile,
+		"cascade":  "false",
+	})
+	err := runRun(cmdFlags, opts, []string{"does-not-exist"})
 	if err == nil {
 		t.Fatal("expected error for missing command")
 	}
@@ -534,6 +617,72 @@ func TestLoadEnvironmentOverrides(t *testing.T) {
 	}
 	if env["FOO"] != "baz" {
 		t.Fatalf("FOO=%q, want baz", env["FOO"])
+	}
+}
+
+func TestLoadEnvironmentGlobalsPriorityFirst(t *testing.T) {
+	tmpDir := t.TempDir()
+	envFile := filepath.Join(tmpDir, ".env")
+	if err := os.WriteFile(envFile, []byte("FOO=local\n"), 0o644); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	env, err := loadEnvironment(envOptions{
+		envFiles: []string{envFile},
+		globals:  map[string]string{"FOO": "global", "BAR": "global"},
+		priority: config.GlobalsPriorityFirst,
+	})
+	if err != nil {
+		t.Fatalf("loadEnvironment error: %v", err)
+	}
+	if env["FOO"] != "local" {
+		t.Fatalf("FOO=%q, want local", env["FOO"])
+	}
+	if env["BAR"] != "global" {
+		t.Fatalf("BAR=%q, want global", env["BAR"])
+	}
+}
+
+func TestLoadEnvironmentGlobalsPriorityLast(t *testing.T) {
+	tmpDir := t.TempDir()
+	envFile := filepath.Join(tmpDir, ".env")
+	if err := os.WriteFile(envFile, []byte("FOO=local\n"), 0o644); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	env, err := loadEnvironment(envOptions{
+		envFiles: []string{envFile},
+		globals:  map[string]string{"FOO": "global"},
+		priority: config.GlobalsPriorityLast,
+	})
+	if err != nil {
+		t.Fatalf("loadEnvironment error: %v", err)
+	}
+	if env["FOO"] != "global" {
+		t.Fatalf("FOO=%q, want global", env["FOO"])
+	}
+}
+
+func TestLoadEnvironmentAutoLocal(t *testing.T) {
+	tmpDir := t.TempDir()
+	envFile := filepath.Join(tmpDir, ".env")
+	localFile := filepath.Join(tmpDir, ".env.local")
+	if err := os.WriteFile(envFile, []byte("FOO=base\n"), 0o644); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+	if err := os.WriteFile(localFile, []byte("FOO=local\n"), 0o644); err != nil {
+		t.Fatalf("write env local file: %v", err)
+	}
+
+	env, err := loadEnvironment(envOptions{
+		envFiles:  []string{envFile},
+		autoLocal: true,
+	})
+	if err != nil {
+		t.Fatalf("loadEnvironment error: %v", err)
+	}
+	if env["FOO"] != "local" {
+		t.Fatalf("FOO=%q, want local", env["FOO"])
 	}
 }
 

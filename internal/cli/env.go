@@ -22,7 +22,9 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
 
+	"github.com/jcouture/nv/internal/config"
 	"github.com/jcouture/nv/internal/loader"
 )
 
@@ -33,6 +35,9 @@ type envOptions struct {
 	overrides []string
 	strict    bool
 	preserve  []string
+	globals   map[string]string
+	priority  string
+	autoLocal bool
 }
 
 func loadEnvironment(opts envOptions) (map[string]string, error) {
@@ -46,13 +51,31 @@ func loadEnvironment(opts envOptions) (map[string]string, error) {
 	var env map[string]string
 	var err error
 
+	baseEnv := l.PreservedEnv()
+	if opts.priority == config.GlobalsPriorityFirst {
+		mergeEnv(baseEnv, opts.globals)
+	}
+
 	if opts.cascade {
-		env, err = l.LoadCascade(opts.env)
+		env, err = l.LoadCascadeWithEnv(opts.env, baseEnv)
 	} else {
-		env, err = l.LoadFiles(opts.envFiles...)
+		files := opts.envFiles
+		if opts.autoLocal {
+			autoLocal := autoLocalForFiles(files)
+			env, err = l.LoadFilesWithEnv(baseEnv, files...)
+			if err == nil && autoLocal != "" {
+				env, err = l.LoadOptionalFilesWithEnv(env, autoLocal)
+			}
+		} else {
+			env, err = l.LoadFilesWithEnv(baseEnv, files...)
+		}
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to load environment: %w", err)
+	}
+
+	if opts.priority == config.GlobalsPriorityLast {
+		mergeEnv(env, opts.globals)
 	}
 
 	for _, override := range opts.overrides {
@@ -64,6 +87,31 @@ func loadEnvironment(opts envOptions) (map[string]string, error) {
 	}
 
 	return env, nil
+}
+
+func mergeEnv(dst map[string]string, src map[string]string) {
+	for k, v := range src {
+		dst[k] = v
+	}
+}
+
+func autoLocalForFiles(files []string) string {
+	hasLocal := false
+	for _, file := range files {
+		if filepath.Base(file) == ".env.local" {
+			hasLocal = true
+			break
+		}
+	}
+	for _, file := range files {
+		if filepath.Base(file) == ".env" {
+			if hasLocal {
+				return ""
+			}
+			return filepath.Join(filepath.Dir(file), ".env.local")
+		}
+	}
+	return ""
 }
 
 func parseOverride(s string) (string, string, error) {

@@ -21,8 +21,10 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/jcouture/nv/internal/config"
 	"github.com/jcouture/nv/internal/exec"
 	"github.com/jcouture/nv/internal/exporter"
 	"github.com/spf13/cobra"
@@ -56,7 +58,7 @@ func newRunCmd() *cobra.Command {
   nvx run --cascade --env=production -- ./deploy.sh`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRun(opts, args)
+			return runRun(cmd, opts, args)
 		},
 	}
 
@@ -79,7 +81,40 @@ func newRunCmd() *cobra.Command {
 	return cmd
 }
 
-func runRun(opts *runOptions, args []string) error {
+func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
+	cfg, migrated, err := config.LoadWithMigration()
+	if err != nil {
+		return err
+	}
+
+	flags := cmd.Flags()
+	if !flags.Changed("env-file") {
+		opts.envFiles = []string{cfg.Defaults.EnvFile}
+	}
+	if !flags.Changed("cascade") {
+		opts.cascade = cfg.Defaults.Cascade
+	}
+	if !flags.Changed("dry-run") {
+		opts.dryRun = cfg.Defaults.DryRun
+	}
+	if !flags.Changed("validate") {
+		opts.validate = cfg.Validation.Enabled || cfg.General.AutoValidate
+	}
+	if !flags.Changed("schema") && !flags.Changed("schema-file") {
+		opts.schemaFile = cfg.Validation.SchemaFile
+	}
+	if !flags.Changed("schema-strict") {
+		opts.schemaStrict = !cfg.Validation.AllowExtra
+	}
+
+	if cfg.General.Verbosity >= 2 {
+		fmt.Fprintf(os.Stderr, "Loading config from: %s\n", configPath())
+		fmt.Fprintf(os.Stderr, "Loading global env: %d variables\n", len(cfg.Globals.Env))
+	}
+	if cfg.General.Verbosity >= 1 && migrated {
+		fmt.Fprintln(os.Stderr, "Successfully migrated ~/.nv to config")
+	}
+
 	env, err := loadEnvironment(envOptions{
 		envFiles:  opts.envFiles,
 		cascade:   opts.cascade,
@@ -87,6 +122,9 @@ func runRun(opts *runOptions, args []string) error {
 		overrides: opts.overrides,
 		strict:    opts.strict,
 		preserve:  opts.preserve,
+		globals:   cfg.GetGlobalEnv(),
+		priority:  cfg.Globals.Priority,
+		autoLocal: !flags.Changed("env-file") && cfg.Defaults.AutoLocal,
 	})
 	if err != nil {
 		return err
@@ -117,4 +155,12 @@ func runRun(opts *runOptions, args []string) error {
 	}
 
 	return exitError{code: exitCode}
+}
+
+func configPath() string {
+	path, err := config.GetConfigPath()
+	if err != nil {
+		return "unknown"
+	}
+	return path
 }

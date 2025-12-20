@@ -132,3 +132,120 @@ func TestLoadCascadeDefaultEnv(t *testing.T) {
 		t.Fatalf("ENV=%q, want dev", env["ENV"])
 	}
 }
+
+func TestLoadFilesWithEnv(t *testing.T) {
+	tmpDir := t.TempDir()
+	envFile := filepath.Join(tmpDir, ".env")
+	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	l := New()
+	base := map[string]string{"GLOBAL": "1"}
+	env, err := l.LoadFilesWithEnv(base, envFile)
+	if err != nil {
+		t.Fatalf("LoadFilesWithEnv error: %v", err)
+	}
+	if env["GLOBAL"] != "1" {
+		t.Fatalf("GLOBAL=%q, want 1", env["GLOBAL"])
+	}
+	if env["FOO"] != "bar" {
+		t.Fatalf("FOO=%q, want bar", env["FOO"])
+	}
+}
+
+func TestLoadCascadeWithEnv(t *testing.T) {
+	tmpDir := t.TempDir()
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(cwd)
+	})
+
+	if err := os.WriteFile(filepath.Join(tmpDir, ".env"), []byte("BASE=1\n"), 0o644); err != nil {
+		t.Fatalf("write env: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, ".env.development"), []byte("ENV=dev\n"), 0o644); err != nil {
+		t.Fatalf("write env: %v", err)
+	}
+
+	l := New()
+	base := map[string]string{"GLOBAL": "1"}
+	env, err := l.LoadCascadeWithEnv("development", base)
+	if err != nil {
+		t.Fatalf("LoadCascadeWithEnv error: %v", err)
+	}
+	if env["GLOBAL"] != "1" {
+		t.Fatalf("GLOBAL=%q, want 1", env["GLOBAL"])
+	}
+	if env["ENV"] != "dev" {
+		t.Fatalf("ENV=%q, want dev", env["ENV"])
+	}
+}
+
+func TestLoadFilesWithEnvParseError(t *testing.T) {
+	tmpDir := t.TempDir()
+	envFile := filepath.Join(tmpDir, ".env")
+	if err := os.WriteFile(envFile, []byte("BROKEN"), 0o644); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	l := New()
+	_, err := l.LoadFilesWithEnv(map[string]string{"BASE": "1"}, envFile)
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+}
+
+func TestLoadCascadeParseError(t *testing.T) {
+	tmpDir := t.TempDir()
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(cwd)
+	})
+
+	if err := os.WriteFile(filepath.Join(tmpDir, ".env"), []byte("BROKEN"), 0o644); err != nil {
+		t.Fatalf("write env: %v", err)
+	}
+
+	l := New()
+	_, err = l.LoadCascade("development")
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+}
+
+func TestLoadCascadeWithEnvParseError(t *testing.T) {
+	tmpDir := t.TempDir()
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(cwd)
+	})
+
+	if err := os.WriteFile(filepath.Join(tmpDir, ".env"), []byte("BROKEN"), 0o644); err != nil {
+		t.Fatalf("write env: %v", err)
+	}
+
+	l := New()
+	_, err = l.LoadCascadeWithEnv("development", map[string]string{"BASE": "1"})
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+}

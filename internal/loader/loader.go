@@ -66,6 +66,34 @@ func (l *Loader) LoadFiles(files ...string) (map[string]string, error) {
 	return env, nil
 }
 
+func (l *Loader) LoadFilesWithEnv(env map[string]string, files ...string) (map[string]string, error) {
+	if env == nil {
+		env = l.preservedEnv()
+	}
+	for _, file := range files {
+		if err := l.loadFile(file, env, false); err != nil {
+			return nil, err
+		}
+	}
+	return env, nil
+}
+
+func (l *Loader) LoadOptionalFilesWithEnv(env map[string]string, files ...string) (map[string]string, error) {
+	if env == nil {
+		env = l.preservedEnv()
+	}
+	for _, file := range files {
+		if err := l.loadFile(file, env, true); err != nil {
+			return nil, err
+		}
+	}
+	return env, nil
+}
+
+func (l *Loader) PreservedEnv() map[string]string {
+	return l.preservedEnv()
+}
+
 func (l *Loader) preservedEnv() map[string]string {
 	env := make(map[string]string)
 	for _, key := range l.preserve {

@@ -18,56 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package cli
 
-import "os"
+import (
+	"path/filepath"
+	"testing"
 
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+	"github.com/stretchr/testify/require"
+)
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
-
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+func TestAutoLocalForFilesAbsolute(t *testing.T) {
+	dir := t.TempDir()
+	files := []string{filepath.Join(dir, ".env")}
+	out := autoLocalForFiles(files)
+	require.Equal(t, filepath.Join(dir, ".env.local"), out)
 }
 
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+func TestMergeEnv(t *testing.T) {
+	base := map[string]string{"A": "1"}
+	mergeEnv(base, map[string]string{"B": "2", "A": "3"})
+	require.Equal(t, "3", base["A"])
+	require.Equal(t, "2", base["B"])
+}
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
+func TestAutoLocalForFilesNoEnv(t *testing.T) {
+	files := []string{"/tmp/custom.env"}
+	out := autoLocalForFiles(files)
+	require.Empty(t, out)
+}
 
-	if env == nil {
-		env = l.preservedEnv()
-	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+func TestAutoLocalForFilesAlreadyPresent(t *testing.T) {
+	dir := t.TempDir()
+	files := []string{filepath.Join(dir, ".env"), filepath.Join(dir, ".env.local")}
+	out := autoLocalForFiles(files)
+	require.Empty(t, out)
 }

@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	"github.com/jcouture/nv/internal/parser"
-	"github.com/mitchellh/go-homedir"
 )
 
 func ReadVarsFromFile(fn string) (map[string]string, error) {
@@ -35,7 +34,10 @@ func ReadVarsFromFile(fn string) (map[string]string, error) {
 }
 
 func ReadGlobalVars() map[string]string {
-	hdir, _ := homedir.Dir()
+	hdir, err := os.UserHomeDir()
+	if err != nil {
+		return nil
+	}
 	fn := filepath.Join(hdir, ".nv")
 	// Purposefuly ignoring any errors
 	globals, _ := ReadVarsFromFile(fn)

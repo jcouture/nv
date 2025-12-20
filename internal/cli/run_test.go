@@ -28,7 +28,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/adrg/xdg"
 	"github.com/fatih/color"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseOverride(t *testing.T) {
@@ -45,8 +47,34 @@ func TestParseOverride(t *testing.T) {
 	}
 }
 
+func TestConfigPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
+
+	path := configPath()
+	if path == "unknown" {
+		t.Fatalf("expected config path")
+	}
+}
+
+func TestRunConfigPathError(t *testing.T) {
+	orig := xdg.ConfigHome
+	t.Cleanup(func() { xdg.ConfigHome = orig })
+
+	xdg.ConfigHome = ""
+	path := configPath()
+	if path != "unknown" {
+		t.Fatalf("expected unknown config path")
+	}
+}
+
 func TestRunDryRun(t *testing.T) {
 	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
 	envFile := filepath.Join(tmpDir, ".env")
 
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
@@ -59,7 +87,12 @@ func TestRunDryRun(t *testing.T) {
 	}
 
 	stdout, stderr := captureOutput(t, func() {
-		if err := runRun(opts, []string{"echo", "hello"}); err != nil {
+		cmd := newRunCmdForTest(t, map[string]string{
+			"env-file": envFile,
+			"dry-run":  "true",
+			"cascade":  "false",
+		})
+		if err := runRun(cmd, opts, []string{"echo", "hello"}); err != nil {
 			t.Fatalf("runRun error: %v", err)
 		}
 	})
@@ -69,6 +102,37 @@ func TestRunDryRun(t *testing.T) {
 	}
 	if stderr != "" {
 		t.Fatalf("expected no stderr output, got: %s", stderr)
+	}
+}
+
+func TestRunUsesConfigDefaults(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
+
+	cfgPath := filepath.Join(tmpDir, "xdg", "nv", "config.toml")
+	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o750))
+	configData := []byte("[defaults]\nenv_file=\".env.custom\"\ndry_run=true\ncascade=false\n\n[validation]\nenabled=false\nschema_file=\".env.example\"\n\n[general]\nauto_validate=false\nverbosity=1\n")
+	require.NoError(t, os.WriteFile(cfgPath, configData, 0o600))
+
+	workDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(workDir, ".env.custom"), []byte("FOO=bar\n"), 0o644))
+
+	cmdFlags := newRunCmdForTest(t, nil)
+	opts := &runOptions{format: "shell"}
+
+	stdout, _ := captureOutput(t, func() {
+		cwd, err := os.Getwd()
+		require.NoError(t, err)
+		require.NoError(t, os.Chdir(workDir))
+		t.Cleanup(func() { _ = os.Chdir(cwd) })
+
+		require.NoError(t, runRun(cmdFlags, opts, []string{"echo", "ok"}))
+	})
+
+	if !strings.Contains(stdout, "export FOO=\"bar\"") {
+		t.Fatalf("unexpected output: %s", stdout)
 	}
 }
 

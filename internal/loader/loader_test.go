@@ -92,3 +92,56 @@ func TestLoadCascadeSkipsMissing(t *testing.T) {
 		t.Fatalf("ENV=%q, want dev", env["ENV"])
 	}
 }
+
+func TestPreservedEnvWithCustomVar(t *testing.T) {
+	const key = "NV_TEST_PRESERVE"
+	t.Setenv(key, "kept")
+
+	l := New(WithPreserve([]string{key}))
+	env := l.PreservedEnv()
+	if env[key] != "kept" {
+		t.Fatalf("expected %s=kept, got %q", key, env[key])
+	}
+}
+
+func TestLoadFilesWithEnvNilPreserves(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, ".env")
+	if err := os.WriteFile(path, []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write env: %v", err)
+	}
+
+	const key = "NV_TEST_KEEP"
+	t.Setenv(key, "1")
+
+	l := New(WithPreserve([]string{key}))
+	env, err := l.LoadFilesWithEnv(nil, path)
+	if err != nil {
+		t.Fatalf("LoadFilesWithEnv error: %v", err)
+	}
+	if env[key] != "1" {
+		t.Fatalf("expected %s=1, got %q", key, env[key])
+	}
+	if env["FOO"] != "bar" {
+		t.Fatalf("expected FOO=bar, got %q", env["FOO"])
+	}
+}
+
+func TestLoadOptionalFilesWithEnvSkipsMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+	base := filepath.Join(tmpDir, ".env")
+	missing := filepath.Join(tmpDir, ".env.local")
+
+	if err := os.WriteFile(base, []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write base env: %v", err)
+	}
+
+	l := New()
+	env, err := l.LoadOptionalFilesWithEnv(nil, base, missing)
+	if err != nil {
+		t.Fatalf("LoadOptionalFilesWithEnv error: %v", err)
+	}
+	if env["FOO"] != "bar" {
+		t.Fatalf("FOO=%q, want bar", env["FOO"])
+	}
+}

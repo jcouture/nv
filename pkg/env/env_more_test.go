@@ -18,56 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package loader
+package env
 
-import "os"
+import (
+	"testing"
 
-func (l *Loader) LoadCascade(envName string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+	"github.com/stretchr/testify/require"
+)
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
+func TestExistsGetvarsGetnames(t *testing.T) {
+	t.Setenv("NVX_ENV_TEST", "value")
 
-	env := l.preservedEnv()
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+	require.True(t, Exists("NVX_ENV_TEST"))
+	require.False(t, Exists("NVX_ENV_MISSING"))
+
+	vars := Getvars()
+	require.Equal(t, "value", vars["NVX_ENV_TEST"])
+
+	names := Getnames(map[string]string{"A": "1", "": "skip"})
+	require.Contains(t, names, "A")
 }
 
-func (l *Loader) LoadCascadeWithEnv(envName string, env map[string]string) (map[string]string, error) {
-	if envName == "" {
-		envName = os.Getenv("NV_ENV")
-		if envName == "" {
-			envName = "development"
-		}
-	}
+func TestJoinOverrides(t *testing.T) {
+	base := map[string]string{"A": "1"}
+	override := map[string]string{"A": "2", "B": "3"}
 
-	files := []string{
-		".env",
-		".env.local",
-		".env." + envName,
-		".env." + envName + ".local",
-	}
+	merged := Join(base, override)
+	require.Equal(t, "2", merged["A"])
+	require.Equal(t, "3", merged["B"])
+}
 
-	if env == nil {
-		env = l.preservedEnv()
-	}
-	for _, file := range files {
-		if err := l.loadFile(file, env, true); err != nil {
-			return nil, err
-		}
-	}
-	return env, nil
+func TestSetvarsAndClear(t *testing.T) {
+	vars := map[string]string{"NVX_SET_TEST": "1", "NVX_CLEAR_TEST": "2"}
+	require.NoError(t, Setvars(vars))
+
+	cleared := Clear("NVX_SET_TEST")
+	require.NoError(t, cleared)
+	require.True(t, Exists("NVX_SET_TEST"))
+	require.False(t, Exists("NVX_CLEAR_TEST"))
 }
