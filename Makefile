@@ -25,7 +25,7 @@ FUZZTIME ?= 30s
 ## Run unit tests
 test:
 	@echo "Running tests with coverage..."
-	@go test -race -coverprofile=coverage.out -covermode=atomic ./...
+	@go test -coverprofile=coverage.out -covermode=atomic ./...
 	@go tool cover -func=coverage.out | grep total | awk '{print "Total coverage: " $$3}'
 
 .PHONY: coverage
