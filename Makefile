@@ -36,7 +36,7 @@ coverage: test
 ## Run fuzz tests
 fuzz:
 	@for pkg in $$(go list $(FUZZ_PKGS)); do \
-		fuzzes=$$(go test $$pkg -list '^Fuzz' 2>/dev/null | rg '^Fuzz'); \
+		fuzzes=$$(go test $$pkg -list '^Fuzz' 2>/dev/null | grep '^Fuzz'); \
 		if [ -z "$$fuzzes" ]; then \
 			continue; \
 		fi; \
