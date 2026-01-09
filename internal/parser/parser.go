@@ -27,10 +27,10 @@ import (
 	"strings"
 )
 
-// Option configures the parser.
+// Option tweaks the parser.
 type Option func(*Parser)
 
-// WithExistingEnv provides variables available for interpolation.
+// WithExistingEnv feeds vars into interpolation.
 func WithExistingEnv(env map[string]string) Option {
 	copied := make(map[string]string, len(env))
 	for k, v := range env {
@@ -41,7 +41,7 @@ func WithExistingEnv(env map[string]string) Option {
 	}
 }
 
-// WithStrictInterpolation enables errors on unresolved variables.
+// WithStrictInterpolation makes missing vars an error.
 func WithStrictInterpolation() Option {
 	return func(p *Parser) {
 		p.strict = true
@@ -58,7 +58,7 @@ type Parser struct {
 	peekToken Token
 }
 
-// NewParser creates a parser that consumes tokens from the lexer.
+// NewParser wires up a parser on top of a lexer.
 func NewParser(lexer *Lexer, opts ...Option) *Parser {
 	p := &Parser{
 		lexer:  lexer,
@@ -76,14 +76,14 @@ func NewParser(lexer *Lexer, opts ...Option) *Parser {
 	return p
 }
 
-// Parse executes parsing and returns the resulting environment variables.
+// Parse walks tokens and builds the env map.
 func (p *Parser) Parse() (map[string]string, error) {
 	for p.curToken.Type != TokenEOF {
 		switch p.curToken.Type {
 		case TokenNewline, TokenComment:
 			p.nextToken()
 		case TokenExport:
-			p.handleExport()
+			p.parseExport()
 		case TokenKey:
 			p.parseAssignment(p.curToken)
 		default:
@@ -102,7 +102,7 @@ func (p *Parser) Parse() (map[string]string, error) {
 	return p.result, nil
 }
 
-// ParseFile parses an .env file on disk.
+// ParseFile reads a file and parses it.
 func ParseFile(filename string, opts ...Option) (map[string]string, error) {
 	// #nosec G304 - filenames are provided explicitly by the user/CLI; this parser intentionally reads the requested path.
 	data, err := os.ReadFile(filename)
@@ -114,7 +114,7 @@ func ParseFile(filename string, opts ...Option) (map[string]string, error) {
 	return parser.Parse()
 }
 
-func (p *Parser) handleExport() {
+func (p *Parser) parseExport() {
 	p.nextToken()
 	if p.curToken.Type != TokenKey {
 		p.errors = append(p.errors, fmt.Errorf("expected key after export, got %s", p.curToken.Literal))

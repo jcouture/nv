@@ -49,8 +49,8 @@ func NewRootCmd(name string) *cobra.Command {
 	var noColor bool
 	rootCmd := &cobra.Command{
 		Use:           name,
-		Short:         "Environment variable manager",
-		Long:          "Loads context-specific environment variables from .env files before executing a command.",
+		Short:         "Env loader + runner",
+		Long:          "Loads .env files (project/local/cascade) then runs a command.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
