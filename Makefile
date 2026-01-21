@@ -86,7 +86,7 @@ precommit: fmt tidy vet gosec test
 
 ## Clean build artifacts
 clean:
-	@rm -rf $(BIN_DIR) $(GOCACHE_DIR)
+	@rm -rf $(BIN_DIR) $(GOCACHE_DIR) dist/
 	@go clean
 	@echo "Cleaned build artifacts"
 
