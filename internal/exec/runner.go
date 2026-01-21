@@ -59,6 +59,9 @@ func (r *Runner) Run() (int, error) {
 		return 1, err
 	}
 
+	restoreTerminal := setForegroundProcessGroup(cmd)
+	defer restoreTerminal()
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, signalsToForward()...)
 
