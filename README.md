@@ -55,6 +55,8 @@ That is it. `nvx` loads variables from `.env` and runs your command with them.
 nvx run -e .env -e .env.local -- ./myapp
 ```
 
+Note: when you pass one or more `-e/--env-file`, cascading is automatically disabled (with a warning) so only the explicit files are used. Use `--cascade` without `-e` when you want the cascade chain (`.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`).
+
 ### Cascade env files automatically
 
 Loads `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`:
