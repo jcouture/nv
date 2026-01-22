@@ -52,7 +52,7 @@ func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [flags] -- <command> [args...]",
 		Short: "Execute a command with loaded environment",
-		Long:  "Load environment variables from .env files and execute the specified command.",
+		Long:  "Load environment variables from .env files and execute the specified command. When --env-file is provided, cascading is automatically disabled (with a warning) so explicit files take precedence.",
 		Example: `  nvx run -e .env -- ./myapp
   nvx run -e .env -e .env.local -- npm start
   nvx run --cascade --env=production -- ./deploy.sh`,
@@ -88,6 +88,7 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 	}
 
 	flags := cmd.Flags()
+	explicitEnvFiles := flags.Changed("env-file")
 	if !flags.Changed("env-file") {
 		opts.envFiles = []string{cfg.Defaults.EnvFile}
 	}
@@ -113,6 +114,10 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 	}
 	if cfg.General.Verbosity >= 1 && migrated {
 		fmt.Fprintln(os.Stderr, "Successfully migrated ~/.nv to config")
+	}
+	if explicitEnvFiles && opts.cascade {
+		fmt.Fprintf(os.Stderr, "warning: --env-file provided; disabling --cascade and using only explicit env files\n\n")
+		opts.cascade = false
 	}
 
 	env, err := loadEnvironment(envOptions{
