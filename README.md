@@ -140,6 +140,14 @@ You can flip the globals priority:
 nvx config set globals.priority "last"
 ```
 
+What each layer means:
+
+- Command-line arguments: `KEY=value` prefixes on the command you run after `--`, applied by the launched process (highest priority).
+- CLI flags: `-o/--override KEY=value` passed to `nvx`, applied after files and globals.
+- Cascading files: in cascade mode, loaded in order `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local` (missing files are skipped).
+- Standard files: any `--env-file/-e` files are loaded in the order provided; with `--auto-local` defaults, `.env` is followed by optional `.env.local`.
+- Globals: `[globals.env]` from config; merged before files when `globals.priority=first` (default) or after files when set to `last`.
+
 ## Legacy `nv` usage (v2)
 
 ```sh
