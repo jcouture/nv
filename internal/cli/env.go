@@ -22,7 +22,9 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/jcouture/nv/internal/config"
 	"github.com/jcouture/nv/internal/loader"
@@ -38,6 +40,8 @@ type envOptions struct {
 	globals   map[string]string
 	priority  string
 	autoLocal bool
+	verbose   bool
+	trace     bool
 }
 
 func loadEnvironment(opts envOptions) (map[string]string, error) {
@@ -46,12 +50,19 @@ func loadEnvironment(opts envOptions) (map[string]string, error) {
 		loader.WithStrict(opts.strict),
 	}
 
+	if opts.verbose || opts.trace {
+		loaderOpts = append(loaderOpts, loader.WithTracer(traceLoaderEvent))
+	}
+
 	l := loader.New(loaderOpts...)
 
 	var env map[string]string
 	var err error
 
 	baseEnv := l.PreservedEnv()
+	if opts.trace && opts.priority == config.GlobalsPriorityFirst {
+		traceGlobals(baseEnv, opts.globals)
+	}
 	if opts.priority == config.GlobalsPriorityFirst {
 		mergeEnv(baseEnv, opts.globals)
 	}
@@ -75,18 +86,78 @@ func loadEnvironment(opts envOptions) (map[string]string, error) {
 	}
 
 	if opts.priority == config.GlobalsPriorityLast {
+		if opts.trace {
+			traceGlobals(env, opts.globals)
+		}
 		mergeEnv(env, opts.globals)
 	}
 
+	type overrideChange struct {
+		key    string
+		exists bool
+	}
+	var changes []overrideChange
 	for _, override := range opts.overrides {
 		key, value, err := parseOverride(override)
 		if err != nil {
 			return nil, fmt.Errorf("invalid override %q: %w", override, err)
 		}
+		_, exists := env[key]
 		env[key] = value
+		changes = append(changes, overrideChange{key: key, exists: exists})
+	}
+
+	if (opts.verbose || opts.trace) && len(changes) > 0 {
+		fmt.Fprintln(os.Stderr, "Applying overrides:")
+		for _, change := range changes {
+			if change.exists {
+				fmt.Fprintf(os.Stderr, "  %s overridden\n", change.key)
+				continue
+			}
+			fmt.Fprintf(os.Stderr, "  %s added\n", change.key)
+		}
 	}
 
 	return env, nil
+}
+
+func traceLoaderEvent(event loader.TraceEvent) {
+	switch event.Status {
+	case "missing":
+		fmt.Fprintf(os.Stderr, "Skipping missing env file: %s\n", event.File)
+	case "loaded":
+		fmt.Fprintf(os.Stderr, "Loaded env file: %s\n", event.File)
+		for key := range event.Overwritten {
+			fmt.Fprintf(os.Stderr, "  %s overridden\n", key)
+		}
+		for key := range event.Added {
+			fmt.Fprintf(os.Stderr, "  %s added\n", key)
+		}
+	}
+}
+
+func traceGlobals(env map[string]string, globals map[string]string) {
+	if len(globals) == 0 {
+		return
+	}
+
+	keys := make([]string, 0, len(globals))
+	for key := range globals {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	fmt.Fprintln(os.Stderr, "Loading global env:")
+	for _, key := range keys {
+		val := globals[key]
+		if prev, ok := env[key]; ok {
+			if prev != val {
+				fmt.Fprintf(os.Stderr, "  %s overridden\n", key)
+			}
+			continue
+		}
+		fmt.Fprintf(os.Stderr, "  %s added\n", key)
+	}
 }
 
 func mergeEnv(dst map[string]string, src map[string]string) {

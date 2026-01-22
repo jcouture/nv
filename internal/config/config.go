@@ -30,6 +30,8 @@ type Config struct {
 	defined map[string]bool
 }
 
+var verbosityOverride int
+
 type GeneralConfig struct {
 	AutoValidate  bool `toml:"auto_validate"`
 	WarnOnMissing bool `toml:"warn_on_missing"`
@@ -78,4 +80,16 @@ func (c *Config) GetGlobalEnv() map[string]string {
 		out[k] = v
 	}
 	return out
+}
+
+func SetVerbosityOverride(level int) {
+	verbosityOverride = level
+}
+
+func ClearVerbosityOverride() {
+	verbosityOverride = 0
+}
+
+func GetVerbosityOverride() int {
+	return verbosityOverride
 }

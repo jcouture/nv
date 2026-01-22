@@ -53,9 +53,14 @@ func TestConfigPath(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
 	xdg.Reload()
 
+	configDir := filepath.Join(tmpDir, "xdg", "nv")
+	require.NoError(t, os.MkdirAll(configDir, 0o750))
+	configPathOnDisk := filepath.Join(configDir, "config.toml")
+	require.NoError(t, os.WriteFile(configPathOnDisk, []byte("[general]\nverbosity=1\n"), 0o600))
+
 	path := configPath()
-	if path == "unknown" {
-		t.Fatalf("expected config path")
+	if path != configPathOnDisk {
+		t.Fatalf("expected config path %s, got %s", configPathOnDisk, path)
 	}
 }
 
@@ -67,6 +72,18 @@ func TestRunConfigPathError(t *testing.T) {
 	path := configPath()
 	if path != "unknown" {
 		t.Fatalf("expected unknown config path")
+	}
+}
+
+func TestConfigPathMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
+
+	path := configPath()
+	if path != "-" {
+		t.Fatalf("expected '-' for missing config, got %s", path)
 	}
 }
 

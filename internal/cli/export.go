@@ -37,6 +37,7 @@ type exportOptions struct {
 	format       string
 	unredacted   bool
 	maskPatterns []string
+	verbose      bool
 }
 
 func newExportCmd() *cobra.Command {
@@ -61,6 +62,7 @@ func newExportCmd() *cobra.Command {
 	flags.StringVar(&opts.format, "format", exporter.FormatShell, "Export format (shell or json)")
 	flags.BoolVar(&opts.unredacted, "unredacted", false, "Show unredacted values")
 	flags.StringSliceVar(&opts.maskPatterns, "mask-pattern", nil, "Additional regex patterns to mask by value")
+	flags.BoolVarP(&opts.verbose, "verbose", "v", false, "Enable verbose env loading output")
 
 	return cmd
 }
@@ -73,6 +75,8 @@ func runExport(opts *exportOptions) error {
 		overrides: opts.overrides,
 		strict:    opts.strict,
 		preserve:  opts.preserve,
+		verbose:   opts.verbose,
+		trace:     opts.verbose,
 	})
 	if err != nil {
 		return err
