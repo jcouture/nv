@@ -25,6 +25,8 @@ package exec
 import (
 	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
 
 	"github.com/mattn/go-isatty"
 	"golang.org/x/sys/unix"
@@ -49,11 +51,19 @@ func setForegroundProcessGroup(cmd *exec.Cmd) func() {
 		return func() {}
 	}
 
-	if err := unix.IoctlSetPointerInt(fd, unix.TIOCSPGRP, pgid); err != nil {
-		return func() {}
-	}
+	runWithoutSigttou(func() {
+		_ = unix.IoctlSetPointerInt(fd, unix.TIOCSPGRP, pgid)
+	})
 
 	return func() {
-		_ = unix.IoctlSetPointerInt(fd, unix.TIOCSPGRP, originalGroup)
+		runWithoutSigttou(func() {
+			_ = unix.IoctlSetPointerInt(fd, unix.TIOCSPGRP, originalGroup)
+		})
 	}
+}
+
+func runWithoutSigttou(fn func()) {
+	signal.Ignore(syscall.SIGTTOU)
+	defer signal.Reset(syscall.SIGTTOU)
+	fn()
 }
