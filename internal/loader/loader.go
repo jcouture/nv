@@ -30,9 +30,24 @@ import (
 type Loader struct {
 	preserve []string
 	strict   bool
+	tracer   TraceFunc
 }
 
 type Option func(*Loader)
+
+type TraceEvent struct {
+	File        string
+	Status      string
+	Added       map[string]string
+	Overwritten map[string]Overwrite
+}
+
+type Overwrite struct {
+	From string
+	To   string
+}
+
+type TraceFunc func(event TraceEvent)
 
 func WithPreserve(vars []string) Option {
 	return func(l *Loader) {
@@ -43,6 +58,12 @@ func WithPreserve(vars []string) Option {
 func WithStrict(strict bool) Option {
 	return func(l *Loader) {
 		l.strict = strict
+	}
+}
+
+func WithTracer(fn TraceFunc) Option {
+	return func(l *Loader) {
+		l.tracer = fn
 	}
 }
 
@@ -115,13 +136,33 @@ func (l *Loader) loadFile(path string, env map[string]string, optional bool) err
 	parsed, err := parser.ParseFile(path, opts...)
 	if err != nil {
 		if optional && errors.Is(err, os.ErrNotExist) {
+			if l.tracer != nil {
+				l.tracer(TraceEvent{File: path, Status: "missing"})
+			}
 			return nil
 		}
 		return err
 	}
 
+	added := make(map[string]string)
+	overwritten := make(map[string]Overwrite)
 	for k, v := range parsed {
+		if prev, ok := env[k]; ok {
+			if prev != v {
+				overwritten[k] = Overwrite{From: prev, To: v}
+			}
+		} else {
+			added[k] = v
+		}
 		env[k] = v
+	}
+	if l.tracer != nil {
+		l.tracer(TraceEvent{
+			File:        path,
+			Status:      "loaded",
+			Added:       added,
+			Overwritten: overwritten,
+		})
 	}
 	return nil
 }

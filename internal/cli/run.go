@@ -108,16 +108,21 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 		opts.schemaStrict = !cfg.Validation.AllowExtra
 	}
 
-	if cfg.General.Verbosity >= 2 {
+	if level := verbosityLevel(); level > 0 {
+		cfg.General.Verbosity = level
+	}
+
+	warnCascade := explicitEnvFiles && opts.cascade
+	if warnCascade {
+		opts.cascade = false
+	}
+
+	verboseOutput := cfg.General.Verbosity >= 2
+	if verboseOutput {
 		fmt.Fprintf(os.Stderr, "Loading config from: %s\n", configPath())
-		fmt.Fprintf(os.Stderr, "Loading global env: %d variables\n", len(cfg.Globals.Env))
 	}
 	if cfg.General.Verbosity >= 1 && migrated {
-		fmt.Fprintln(os.Stderr, "Successfully migrated ~/.nv to config")
-	}
-	if explicitEnvFiles && opts.cascade {
-		fmt.Fprintf(os.Stderr, "warning: --env-file provided; disabling --cascade and using only explicit env files\n\n")
-		opts.cascade = false
+		fmt.Fprintf(os.Stderr, "Successfully migrated ~/.nv to config\n")
 	}
 
 	env, err := loadEnvironment(envOptions{
@@ -130,7 +135,16 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 		globals:   cfg.GetGlobalEnv(),
 		priority:  cfg.Globals.Priority,
 		autoLocal: !flags.Changed("env-file") && cfg.Defaults.AutoLocal,
+		verbose:   cfg.General.Verbosity >= 2,
+		trace:     cfg.General.Verbosity >= 2,
 	})
+	if warnCascade {
+		if verboseOutput {
+			fmt.Fprintln(os.Stderr)
+		}
+		fmt.Fprintf(os.Stderr, "warning: --env-file provided; disabling --cascade and using only explicit env files\n")
+		fmt.Fprintln(os.Stderr)
+	}
 	if err != nil {
 		return err
 	}
@@ -163,6 +177,14 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 }
 
 func configPath() string {
+	exists, err := config.ConfigExists()
+	if err != nil {
+		return "unknown"
+	}
+	if !exists {
+		return "-"
+	}
+
 	path, err := config.GetConfigPath()
 	if err != nil {
 		return "unknown"

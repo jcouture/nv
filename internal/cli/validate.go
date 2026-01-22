@@ -71,12 +71,14 @@ func newValidateCmd() *cobra.Command {
 	flags.StringVar(&opts.schemaFile, "schema", defaultSchemaFile, "Schema file to validate against")
 	flags.StringVar(&opts.schemaFile, "schema-file", defaultSchemaFile, "Schema file to validate against")
 	flags.BoolVar(&opts.schemaStrict, "schema-strict", false, "Warn on environment variables not present in schema")
-	flags.BoolVarP(&opts.verbose, "verbose", "v", false, "Show validation success details")
 
 	return cmd
 }
 
 func runValidate(opts *validateOptions) error {
+	if level := verbosityLevel(); level >= 2 {
+		opts.verbose = true
+	}
 	env, err := loadEnvironment(envOptions{
 		envFiles:  opts.envFiles,
 		cascade:   opts.cascade,
@@ -84,6 +86,8 @@ func runValidate(opts *validateOptions) error {
 		overrides: opts.overrides,
 		strict:    opts.strict,
 		preserve:  opts.preserve,
+		verbose:   opts.verbose,
+		trace:     opts.verbose,
 	})
 	if err != nil {
 		return err

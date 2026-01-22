@@ -47,6 +47,7 @@ func NewRootCmd(name string) *cobra.Command {
 		name = "nvx"
 	}
 	var noColor bool
+	var verbose bool
 	rootCmd := &cobra.Command{
 		Use:           name,
 		Short:         "Env loader + runner",
@@ -57,8 +58,10 @@ func NewRootCmd(name string) *cobra.Command {
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable colored output")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output for env loading")
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureColors(noColor)
+		setVerbosityOverride(verbose)
 	}
 
 	rootCmd.AddCommand(
