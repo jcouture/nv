@@ -1,6 +1,5 @@
 [general]
 auto_validate = true
-warn_on_missing = false
 verbosity = 2
 
 [defaults]

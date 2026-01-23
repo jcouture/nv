@@ -244,9 +244,6 @@ func (c *Config) MergeWithDefaults() {
 	if !c.defined["general.auto_validate"] {
 		c.General.AutoValidate = defaults.General.AutoValidate
 	}
-	if !c.defined["general.warn_on_missing"] {
-		c.General.WarnOnMissing = defaults.General.WarnOnMissing
-	}
 	if !c.defined["general.verbosity"] {
 		c.General.Verbosity = defaults.General.Verbosity
 	}
@@ -292,7 +289,6 @@ func definedFromMeta(meta toml.MetaData) map[string]bool {
 		key  string
 	}{
 		{[]string{"general", "auto_validate"}, "general.auto_validate"},
-		{[]string{"general", "warn_on_missing"}, "general.warn_on_missing"},
 		{[]string{"general", "verbosity"}, "general.verbosity"},
 		{[]string{"defaults", "env_file"}, "defaults.env_file"},
 		{[]string{"defaults", "auto_local"}, "defaults.auto_local"},

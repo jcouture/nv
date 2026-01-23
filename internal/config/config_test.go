@@ -53,7 +53,7 @@ func TestConfigPartialMergeWithDefaults(t *testing.T) {
 
 	defaults := Default()
 	require.Equal(t, ".env.custom", cfg.Defaults.EnvFile)
-	require.Equal(t, defaults.General.WarnOnMissing, cfg.General.WarnOnMissing)
+	require.Equal(t, defaults.General.Verbosity, cfg.General.Verbosity)
 	require.Equal(t, defaults.Validation.SchemaFile, cfg.Validation.SchemaFile)
 }
 

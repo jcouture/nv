@@ -392,8 +392,6 @@ func getConfigValue(cfg *config.Config, key string) (string, error) {
 	switch key {
 	case "general.auto_validate":
 		return strconv.FormatBool(cfg.General.AutoValidate), nil
-	case "general.warn_on_missing":
-		return strconv.FormatBool(cfg.General.WarnOnMissing), nil
 	case "general.verbosity":
 		return strconv.Itoa(cfg.General.Verbosity), nil
 	case "defaults.env_file":
@@ -431,12 +429,6 @@ func setConfigValue(cfg *config.Config, key string, value string) error {
 			return err
 		}
 		cfg.General.AutoValidate = parsed
-	case "general.warn_on_missing":
-		parsed, err := strconv.ParseBool(value)
-		if err != nil {
-			return err
-		}
-		cfg.General.WarnOnMissing = parsed
 	case "general.verbosity":
 		parsed, err := strconv.Atoi(value)
 		if err != nil {
