@@ -28,6 +28,7 @@ import (
 const redactedValue = "***REDACTED***"
 
 var defaultValuePatterns = []*regexp.Regexp{
+	// keep this lean—more patterns == more false positives (see #219)
 	regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----`),
 	regexp.MustCompile(`\bAKIA[0-9A-Z]{16}\b`),
 	regexp.MustCompile(`\bASIA[0-9A-Z]{16}\b`),
@@ -59,6 +60,7 @@ func maskValue(key, value string, unredacted bool, valuePatterns []*regexp.Regex
 func isSecretKey(key string) bool {
 	upper := strings.ToUpper(key)
 
+	// public keys aren't secrets; keep them visible so folks can debug ssh
 	if upper == "PUBLIC_KEY" || strings.HasSuffix(upper, "_PUBLIC_KEY") {
 		return false
 	}

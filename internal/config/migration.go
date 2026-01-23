@@ -86,11 +86,11 @@ func MigrateLegacyEnv() (bool, error) {
 		return false, err
 	}
 
-	fmt.Fprintln(os.Stdout, "Migration successful!")
-	fmt.Fprintf(os.Stdout, "Global variables moved to: %s\n", configPath)
-	fmt.Fprintf(os.Stdout, "Backup saved to: %s\n\n", filepath.Join(filepath.Dir(configPath), "nv.backup"))
-	fmt.Fprintln(os.Stdout, "View your globals: nv config show")
-	fmt.Fprintln(os.Stdout, "Edit your config: nv config edit")
+	fmt.Fprintln(os.Stdout, "migrated ~/.nv -> config (finally)")
+	fmt.Fprintf(os.Stdout, "globals now live at: %s\n", configPath)
+	fmt.Fprintf(os.Stdout, "backup dropped at: %s\n\n", filepath.Join(filepath.Dir(configPath), "nv.backup"))
+	fmt.Fprintln(os.Stdout, "peek: nv config show")
+	fmt.Fprintln(os.Stdout, "edit: nv config edit    # or just open the file, we won't stop you")
 
 	return true, nil
 }
@@ -122,8 +122,8 @@ func PromptMigration() (bool, error) {
 	}
 
 	fmt.Fprintf(os.Stdout, "Warning: legacy global env file detected: %s\n\n", legacyPath)
-	fmt.Fprintln(os.Stdout, "nv now uses XDG-compliant configuration.")
-	fmt.Fprintln(os.Stdout, "Your global environment variables will be migrated to:")
+	fmt.Fprintln(os.Stdout, "nv moved to XDG paths (sigh).")
+	fmt.Fprintln(os.Stdout, "We'll stash your globals here:")
 	fmt.Fprintf(os.Stdout, "%s\n\n", configPath)
 	fmt.Fprintln(os.Stdout, "Your ~/.nv file will be:")
 	fmt.Fprintln(os.Stdout, "- Parsed and imported into [globals] section")
