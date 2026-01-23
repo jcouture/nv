@@ -83,18 +83,17 @@ func TestConfigValueRoundTrip(t *testing.T) {
 	cfg := config.Default()
 
 	updates := map[string]string{
-		"general.auto_validate":   "true",
-		"general.warn_on_missing": "false",
-		"general.verbosity":       "2",
-		"defaults.env_file":       ".env.custom",
-		"defaults.auto_local":     "false",
-		"defaults.cascade":        "false",
-		"defaults.dry_run":        "true",
-		"validation.enabled":      "true",
-		"validation.schema_file":  ".env.schema",
-		"validation.strict":       "false",
-		"validation.allow_extra":  "false",
-		"globals.priority":        "last",
+		"general.auto_validate":  "true",
+		"general.verbosity":      "2",
+		"defaults.env_file":      ".env.custom",
+		"defaults.auto_local":    "false",
+		"defaults.cascade":       "false",
+		"defaults.dry_run":       "true",
+		"validation.enabled":     "true",
+		"validation.schema_file": ".env.schema",
+		"validation.strict":      "false",
+		"validation.allow_extra": "false",
+		"globals.priority":       "last",
 	}
 
 	for key, value := range updates {

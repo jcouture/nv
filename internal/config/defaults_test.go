@@ -28,7 +28,6 @@ import (
 
 func TestDefaultValues(t *testing.T) {
 	cfg := Default()
-	require.True(t, cfg.General.WarnOnMissing)
 	require.Equal(t, 1, cfg.General.Verbosity)
 	require.Equal(t, ".env", cfg.Defaults.EnvFile)
 	require.True(t, cfg.Defaults.Cascade)
