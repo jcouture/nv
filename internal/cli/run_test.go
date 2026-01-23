@@ -130,7 +130,7 @@ func TestRunUsesConfigDefaults(t *testing.T) {
 
 	cfgPath := filepath.Join(tmpDir, "xdg", "nv", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o750))
-	configData := []byte("[defaults]\nenv_file=\".env.custom\"\ndry_run=true\ncascade=false\n\n[validation]\nenabled=false\nschema_file=\".env.example\"\n\n[general]\nauto_validate=false\nverbosity=1\n")
+	configData := []byte("[defaults]\nenv_file=\".env.custom\"\ndry_run=true\ncascade=false\n\n[validation]\nenabled=false\nschema_file=\".env.example\"\n\n[general]\nverbosity=1\n")
 	require.NoError(t, os.WriteFile(cfgPath, configData, 0o600))
 
 	workDir := t.TempDir()

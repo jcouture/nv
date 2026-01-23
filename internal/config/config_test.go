@@ -31,7 +31,6 @@ import (
 
 func TestConfigTOMLSerialization(t *testing.T) {
 	cfg := Default()
-	cfg.General.AutoValidate = true
 	cfg.Globals.Env = map[string]string{
 		"AWS_REGION": "us-east-1",
 	}
@@ -42,7 +41,6 @@ func TestConfigTOMLSerialization(t *testing.T) {
 	var decoded Config
 	_, err := toml.Decode(buf.String(), &decoded)
 	require.NoError(t, err)
-	require.Equal(t, cfg.General.AutoValidate, decoded.General.AutoValidate)
 	require.Equal(t, cfg.Globals.Env["AWS_REGION"], decoded.Globals.Env["AWS_REGION"])
 }
 

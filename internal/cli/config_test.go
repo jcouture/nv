@@ -329,7 +329,7 @@ func TestConfigSetCommandInvalidValue(t *testing.T) {
 	xdg.Reload()
 
 	setCmd := newConfigSetCmd()
-	err := setCmd.RunE(setCmd, []string{"general.auto_validate", "nope"})
+	err := setCmd.RunE(setCmd, []string{"validation.enabled", "nope"})
 	require.Error(t, err)
 }
 
@@ -345,7 +345,7 @@ func TestConfigSetCommandSaveError(t *testing.T) {
 	xdg.Reload()
 
 	setCmd := newConfigSetCmd()
-	err := setCmd.RunE(setCmd, []string{"general.auto_validate", "true"})
+	err := setCmd.RunE(setCmd, []string{"validation.enabled", "true"})
 	require.Error(t, err)
 }
 

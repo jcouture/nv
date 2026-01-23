@@ -1,5 +1,4 @@
 [general]
-auto_validate = true
 verbosity = 2
 
 [defaults]
