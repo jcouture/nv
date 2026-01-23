@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/jcouture/nv/internal/config"
 	"github.com/jcouture/nv/internal/exec"
 	"github.com/jcouture/nv/internal/exporter"
@@ -116,10 +117,10 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 
 	verboseOutput := cfg.General.Verbosity >= 2
 	if verboseOutput {
-		fmt.Fprintf(os.Stderr, "Loading config from: %s\n", configPath())
+		_, _ = color.New(color.FgHiCyan).Fprintf(os.Stderr, "Loading config from: %s\n", configPath())
 	}
 	if cfg.General.Verbosity >= 1 && migrated {
-		fmt.Fprintf(os.Stderr, "Successfully migrated ~/.nv to config\n")
+		_, _ = color.New(color.FgGreen).Fprintf(os.Stderr, "Successfully migrated ~/.nv to config\n")
 	}
 	env, err := loadEnvironment(envOptions{
 		envFiles:  opts.envFiles,
@@ -138,7 +139,7 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 		if verboseOutput {
 			fmt.Fprintln(os.Stderr)
 		}
-		fmt.Fprintf(os.Stderr, "warning: --env-file provided; disabling --cascade and using only explicit env files\n")
+		_, _ = color.New(color.FgYellow).Fprintf(os.Stderr, "warning: --env-file provided; disabling --cascade and using only explicit env files\n")
 		fmt.Fprintln(os.Stderr) // yes, the blank line is intentional; keeps CI logs readable
 	}
 	if err != nil {
