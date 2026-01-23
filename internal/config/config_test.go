@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
-	"github.com/stretchr/testify/require"
 )
 
 func TestConfigTOMLSerialization(t *testing.T) {
@@ -36,23 +35,37 @@ func TestConfigTOMLSerialization(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	require.NoError(t, toml.NewEncoder(&buf).Encode(cfg))
+	if err := toml.NewEncoder(&buf).Encode(cfg); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
 
 	var decoded Config
 	_, err := toml.Decode(buf.String(), &decoded)
-	require.NoError(t, err)
-	require.Equal(t, cfg.Globals.Env["AWS_REGION"], decoded.Globals.Env["AWS_REGION"])
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if decoded.Globals.Env["AWS_REGION"] != cfg.Globals.Env["AWS_REGION"] {
+		t.Fatalf("AWS_REGION=%s want %s", decoded.Globals.Env["AWS_REGION"], cfg.Globals.Env["AWS_REGION"])
+	}
 }
 
 func TestConfigPartialMergeWithDefaults(t *testing.T) {
 	path := filepath.Join("testdata", "partial_config.toml")
 	cfg, err := LoadFromPath(path)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("LoadFromPath: %v", err)
+	}
 
 	defaults := Default()
-	require.Equal(t, ".env.custom", cfg.Defaults.EnvFile)
-	require.Equal(t, defaults.General.Verbosity, cfg.General.Verbosity)
-	require.Equal(t, defaults.Validation.SchemaFile, cfg.Validation.SchemaFile)
+	if cfg.Defaults.EnvFile != ".env.custom" {
+		t.Fatalf("env file=%s want .env.custom", cfg.Defaults.EnvFile)
+	}
+	if cfg.General.Verbosity != defaults.General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, defaults.General.Verbosity)
+	}
+	if cfg.Validation.SchemaFile != defaults.Validation.SchemaFile {
+		t.Fatalf("schema=%s want %s", cfg.Validation.SchemaFile, defaults.Validation.SchemaFile)
+	}
 }
 
 func TestConfigGlobalsEnvAccess(t *testing.T) {
@@ -63,10 +76,19 @@ func TestConfigGlobalsEnvAccess(t *testing.T) {
 	}
 
 	got := cfg.GetGlobalEnv()
-	require.Equal(t, cfg.Globals.Env, got)
+	if len(got) != len(cfg.Globals.Env) {
+		t.Fatalf("env length mismatch")
+	}
+	for k, v := range cfg.Globals.Env {
+		if got[k] != v {
+			t.Fatalf("key %s value %s want %s", k, got[k], v)
+		}
+	}
 
 	got["EDITOR"] = "nano"
-	require.Equal(t, "vim", cfg.Globals.Env["EDITOR"])
+	if cfg.Globals.Env["EDITOR"] != "vim" {
+		t.Fatalf("expected original env to remain unchanged")
+	}
 }
 
 func TestConfigGlobalsEmpty(t *testing.T) {
@@ -74,5 +96,7 @@ func TestConfigGlobalsEmpty(t *testing.T) {
 	cfg.Globals.Env = nil
 
 	got := cfg.GetGlobalEnv()
-	require.Empty(t, got)
+	if len(got) != 0 {
+		t.Fatalf("expected empty env, got %v", got)
+	}
 }

@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/adrg/xdg"
-	"github.com/stretchr/testify/require"
 )
 
 func TestEnsureConfigDir(t *testing.T) {
@@ -34,11 +33,17 @@ func TestEnsureConfigDir(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", tmpDir)
 	xdg.Reload()
 
-	require.NoError(t, EnsureConfigDir())
+	if err := EnsureConfigDir(); err != nil {
+		t.Fatalf("EnsureConfigDir: %v", err)
+	}
 	dir := filepath.Join(tmpDir, "nv")
 	info, err := os.Stat(dir)
-	require.NoError(t, err)
-	require.True(t, info.IsDir())
+	if err != nil {
+		t.Fatalf("stat config dir: %v", err)
+	}
+	if !info.IsDir() {
+		t.Fatalf("expected directory, got %v", info.Mode())
+	}
 }
 
 func TestLoadUsesDefaultsOnInvalidConfig(t *testing.T) {
@@ -48,10 +53,18 @@ func TestLoadUsesDefaultsOnInvalidConfig(t *testing.T) {
 	xdg.Reload()
 
 	path, err := GetConfigPath()
-	require.NoError(t, err)
-	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o750))
-	require.NoError(t, os.WriteFile(path, []byte("[general]\nverbosity =\n"), 0o600))
+	if err != nil {
+		t.Fatalf("GetConfigPath: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		t.Fatalf("create config dir: %v", err)
+	}
+	if err := os.WriteFile(path, []byte("[general]\nverbosity =\n"), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	cfg := Load()
-	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
+	if cfg.General.Verbosity != Default().General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, Default().General.Verbosity)
+	}
 }

@@ -21,40 +21,56 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/adrg/xdg"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDetectLegacyEnv(t *testing.T) {
 	temp := t.TempDir()
 	t.Setenv("HOME", temp)
 	path := filepath.Join(temp, ".nv")
-	require.NoError(t, os.WriteFile(path, []byte("FOO=bar"), 0o600))
+	if err := os.WriteFile(path, []byte("FOO=bar"), 0o600); err != nil {
+		t.Fatalf("write legacy env: %v", err)
+	}
 
 	exists, err := DetectLegacyEnv()
-	require.NoError(t, err)
-	require.True(t, exists)
+	if err != nil {
+		t.Fatalf("DetectLegacyEnv: %v", err)
+	}
+	if !exists {
+		t.Fatal("expected legacy env to exist")
+	}
 }
 
 func TestParseLegacyEnvFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), ".nv")
-	require.NoError(t, os.WriteFile(path, []byte("FOO=bar"), 0o600))
+	if err := os.WriteFile(path, []byte("FOO=bar"), 0o600); err != nil {
+		t.Fatalf("write legacy: %v", err)
+	}
 
 	env, err := ParseLegacyEnvFile(path)
-	require.NoError(t, err)
-	require.Equal(t, "bar", env["FOO"])
+	if err != nil {
+		t.Fatalf("ParseLegacyEnvFile: %v", err)
+	}
+	if env["FOO"] != "bar" {
+		t.Fatalf("FOO=%s want bar", env["FOO"])
+	}
 }
 
 func TestParseLegacyEnvFileInvalid(t *testing.T) {
 	path := filepath.Join(t.TempDir(), ".nv")
-	require.NoError(t, os.WriteFile(path, []byte("FOO"), 0o600))
+	if err := os.WriteFile(path, []byte("FOO"), 0o600); err != nil {
+		t.Fatalf("write legacy: %v", err)
+	}
 
 	_, err := ParseLegacyEnvFile(path)
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
 }
 
 func TestMigrateLegacyEnv(t *testing.T) {
@@ -64,14 +80,22 @@ func TestMigrateLegacyEnv(t *testing.T) {
 	xdg.Reload()
 
 	legacyPath := filepath.Join(temp, ".nv")
-	require.NoError(t, os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600))
+	if err := os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600); err != nil {
+		t.Fatalf("write legacy: %v", err)
+	}
 
 	migrated, err := MigrateLegacyEnv()
-	require.NoError(t, err)
-	require.True(t, migrated)
+	if err != nil {
+		t.Fatalf("MigrateLegacyEnv: %v", err)
+	}
+	if !migrated {
+		t.Fatal("expected migration to occur")
+	}
 
 	cfg := Load()
-	require.Equal(t, "bar", cfg.Globals.Env["FOO"])
+	if cfg.Globals.Env["FOO"] != "bar" {
+		t.Fatalf("FOO=%s want bar", cfg.Globals.Env["FOO"])
+	}
 }
 
 func TestMigrateLegacyEnvNoLegacy(t *testing.T) {
@@ -81,8 +105,12 @@ func TestMigrateLegacyEnvNoLegacy(t *testing.T) {
 	xdg.Reload()
 
 	migrated, err := MigrateLegacyEnv()
-	require.NoError(t, err)
-	require.False(t, migrated)
+	if err != nil {
+		t.Fatalf("MigrateLegacyEnv: %v", err)
+	}
+	if migrated {
+		t.Fatal("expected no migration")
+	}
 }
 
 func TestMigrateNonInteractive(t *testing.T) {
@@ -92,12 +120,18 @@ func TestMigrateNonInteractive(t *testing.T) {
 	xdg.Reload()
 
 	legacyPath := filepath.Join(temp, ".nv")
-	require.NoError(t, os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600))
+	if err := os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600); err != nil {
+		t.Fatalf("write legacy: %v", err)
+	}
 
-	require.NoError(t, MigrateNonInteractive())
+	if err := MigrateNonInteractive(); err != nil {
+		t.Fatalf("MigrateNonInteractive: %v", err)
+	}
 
 	cfg := Load()
-	require.Equal(t, "bar", cfg.Globals.Env["FOO"])
+	if cfg.Globals.Env["FOO"] != "bar" {
+		t.Fatalf("FOO=%s want bar", cfg.Globals.Env["FOO"])
+	}
 }
 
 func TestBackupAndDeleteLegacyEnv(t *testing.T) {
@@ -107,16 +141,26 @@ func TestBackupAndDeleteLegacyEnv(t *testing.T) {
 	xdg.Reload()
 
 	legacyPath := filepath.Join(temp, ".nv")
-	require.NoError(t, os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600))
+	if err := os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600); err != nil {
+		t.Fatalf("write legacy: %v", err)
+	}
 
-	require.NoError(t, BackupLegacyEnv())
+	if err := BackupLegacyEnv(); err != nil {
+		t.Fatalf("BackupLegacyEnv: %v", err)
+	}
 	backupPath := filepath.Join(filepath.Join(temp, "xdg", "nv"), "nv.backup")
 	_, err := os.Stat(backupPath)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("stat backup: %v", err)
+	}
 
-	require.NoError(t, DeleteLegacyEnv())
+	if err := DeleteLegacyEnv(); err != nil {
+		t.Fatalf("DeleteLegacyEnv: %v", err)
+	}
 	_, err = os.Stat(legacyPath)
-	require.ErrorIs(t, err, os.ErrNotExist)
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected legacy file removed, got %v", err)
+	}
 }
 
 func TestPromptMigrationNonInteractive(t *testing.T) {
@@ -125,6 +169,10 @@ func TestPromptMigrationNonInteractive(t *testing.T) {
 	t.Cleanup(func() { isInteractiveStdin = oldInteractive })
 
 	should, err := PromptMigration()
-	require.NoError(t, err)
-	require.False(t, should)
+	if err != nil {
+		t.Fatalf("PromptMigration: %v", err)
+	}
+	if should {
+		t.Fatal("expected prompt to skip when non-interactive")
+	}
 }

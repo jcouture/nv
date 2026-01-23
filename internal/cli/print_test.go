@@ -34,16 +34,16 @@ func TestRunPrintExactMatch(t *testing.T) {
 	})
 	color.NoColor = true
 
-	t.Setenv("NVX_PRINT_TEST_FOO", "bar")
+	t.Setenv("NV_PRINT_TEST_FOO", "bar")
 	opts := &printOptions{}
 
 	stdout, _ := captureOutput(t, func() {
-		if err := runPrint(opts, []string{"NVX_PRINT_TEST_FOO"}); err != nil {
+		if err := runPrint(opts, []string{"NV_PRINT_TEST_FOO"}); err != nil {
 			t.Fatalf("runPrint error: %v", err)
 		}
 	})
 
-	if !strings.Contains(stdout, "NVX_PRINT_TEST_FOO=bar") {
+	if !strings.Contains(stdout, "NV_PRINT_TEST_FOO=bar") {
 		t.Fatalf("unexpected output: %s", stdout)
 	}
 }
@@ -55,7 +55,7 @@ func TestRunPrintIgnoreCase(t *testing.T) {
 	})
 	color.NoColor = true
 
-	t.Setenv("NVX_PRINT_TEST_BAR", "baz")
+	t.Setenv("NV_PRINT_TEST_BAR", "baz")
 	opts := &printOptions{ignoreCase: true}
 
 	stdout, _ := captureOutput(t, func() {
@@ -64,7 +64,7 @@ func TestRunPrintIgnoreCase(t *testing.T) {
 		}
 	})
 
-	if !strings.Contains(stdout, "NVX_PRINT_TEST_BAR=baz") {
+	if !strings.Contains(stdout, "NV_PRINT_TEST_BAR=baz") {
 		t.Fatalf("unexpected output: %s", stdout)
 	}
 }
@@ -76,19 +76,19 @@ func TestRunPrintSort(t *testing.T) {
 	})
 	color.NoColor = true
 
-	t.Setenv("NVX_PRINT_TEST_SORT_A", "1")
-	t.Setenv("NVX_PRINT_TEST_SORT_B", "2")
+	t.Setenv("NV_PRINT_TEST_SORT_A", "1")
+	t.Setenv("NV_PRINT_TEST_SORT_B", "2")
 
 	opts := &printOptions{sort: true}
 
 	stdout, _ := captureOutput(t, func() {
-		if err := runPrint(opts, []string{"NVX_PRINT_TEST_SORT_"}); err != nil {
+		if err := runPrint(opts, []string{"NV_PRINT_TEST_SORT_"}); err != nil {
 			t.Fatalf("runPrint error: %v", err)
 		}
 	})
 
-	idxA := strings.Index(stdout, "NVX_PRINT_TEST_SORT_A=1")
-	idxB := strings.Index(stdout, "NVX_PRINT_TEST_SORT_B=2")
+	idxA := strings.Index(stdout, "NV_PRINT_TEST_SORT_A=1")
+	idxB := strings.Index(stdout, "NV_PRINT_TEST_SORT_B=2")
 	if idxA == -1 || idxB == -1 {
 		t.Fatalf("unexpected output: %s", stdout)
 	}

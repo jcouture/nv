@@ -29,7 +29,6 @@ import (
 	"testing"
 
 	"github.com/adrg/xdg"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetConfigDirWithXDG(t *testing.T) {
@@ -38,8 +37,12 @@ func TestGetConfigDirWithXDG(t *testing.T) {
 	xdg.Reload()
 
 	dir, err := GetConfigDir()
-	require.NoError(t, err)
-	require.Equal(t, filepath.Join(temp, "nv"), dir)
+	if err != nil {
+		t.Fatalf("GetConfigDir: %v", err)
+	}
+	if dir != filepath.Join(temp, "nv") {
+		t.Fatalf("dir=%s want %s", dir, filepath.Join(temp, "nv"))
+	}
 }
 
 func TestGetConfigDirWithoutXDG(t *testing.T) {
@@ -49,34 +52,57 @@ func TestGetConfigDirWithoutXDG(t *testing.T) {
 	xdg.Reload()
 
 	dir, err := GetConfigDir()
-	require.NoError(t, err)
-	require.Equal(t, filepath.Join(temp, ".config", "nv"), dir)
+	if err != nil {
+		t.Fatalf("GetConfigDir: %v", err)
+	}
+	want := filepath.Join(temp, ".config", "nv")
+	if dir != want {
+		t.Fatalf("dir=%s want %s", dir, want)
+	}
 }
 
 func TestLoadFromPathValid(t *testing.T) {
 	path := filepath.Join("testdata", "valid_config.toml")
 	cfg, err := LoadFromPath(path)
-	require.NoError(t, err)
-	require.Equal(t, 2, cfg.General.Verbosity)
-	require.Equal(t, GlobalsPriorityLast, cfg.Globals.Priority)
-	require.Equal(t, "us-east-1", cfg.Globals.Env["AWS_REGION"])
+	if err != nil {
+		t.Fatalf("LoadFromPath: %v", err)
+	}
+	if cfg.General.Verbosity != 2 {
+		t.Fatalf("verbosity=%d want 2", cfg.General.Verbosity)
+	}
+	if cfg.Globals.Priority != GlobalsPriorityLast {
+		t.Fatalf("priority=%s want %s", cfg.Globals.Priority, GlobalsPriorityLast)
+	}
+	if cfg.Globals.Env["AWS_REGION"] != "us-east-1" {
+		t.Fatalf("AWS_REGION=%s want us-east-1", cfg.Globals.Env["AWS_REGION"])
+	}
 }
 
 func TestLoadFromPathInvalidSyntax(t *testing.T) {
 	path := filepath.Join("testdata", "invalid_syntax.toml")
 	_, err := LoadFromPath(path)
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error for invalid syntax")
+	}
 }
 
 func TestLoadFromPathInvalidValuesFixes(t *testing.T) {
 	path := filepath.Join("testdata", "invalid_values.toml")
 	cfg, err := LoadFromPath(path)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("LoadFromPath: %v", err)
+	}
 
 	defaults := Default()
-	require.Equal(t, defaults.Globals.Priority, cfg.Globals.Priority)
-	require.Equal(t, defaults.General.Verbosity, cfg.General.Verbosity)
-	require.Empty(t, cfg.Globals.Env)
+	if cfg.Globals.Priority != defaults.Globals.Priority {
+		t.Fatalf("priority=%s want %s", cfg.Globals.Priority, defaults.Globals.Priority)
+	}
+	if cfg.General.Verbosity != defaults.General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, defaults.General.Verbosity)
+	}
+	if len(cfg.Globals.Env) != 0 {
+		t.Fatalf("expected empty env, got %v", cfg.Globals.Env)
+	}
 }
 
 func TestSaveToPathCreatesDir(t *testing.T) {
@@ -84,9 +110,13 @@ func TestSaveToPathCreatesDir(t *testing.T) {
 	path := filepath.Join(temp, "nested", "config.toml")
 
 	cfg := Default()
-	require.NoError(t, cfg.SaveToPath(path))
+	if err := cfg.SaveToPath(path); err != nil {
+		t.Fatalf("SaveToPath: %v", err)
+	}
 	_, err := os.Stat(path)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("stat saved config: %v", err)
+	}
 }
 
 func TestSaveToPathInitializesGlobalsEnv(t *testing.T) {
@@ -95,8 +125,12 @@ func TestSaveToPathInitializesGlobalsEnv(t *testing.T) {
 
 	cfg := Default()
 	cfg.Globals.Env = nil
-	require.NoError(t, cfg.SaveToPath(path))
-	require.NotNil(t, cfg.Globals.Env)
+	if err := cfg.SaveToPath(path); err != nil {
+		t.Fatalf("SaveToPath: %v", err)
+	}
+	if cfg.Globals.Env == nil {
+		t.Fatal("Globals.Env should be initialized")
+	}
 }
 
 func TestSaveToPathPermissionError(t *testing.T) {
@@ -106,21 +140,29 @@ func TestSaveToPathPermissionError(t *testing.T) {
 
 	temp := t.TempDir()
 	readonly := filepath.Join(temp, "readonly")
-	require.NoError(t, os.MkdirAll(readonly, 0o555))
+	if err := os.MkdirAll(readonly, 0o555); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
 
 	path := filepath.Join(readonly, "config.toml")
 	cfg := Default()
-	require.NoError(t, os.Chmod(readonly, 0o555))
+	if err := os.Chmod(readonly, 0o555); err != nil {
+		t.Fatalf("chmod: %v", err)
+	}
 
 	err := cfg.SaveToPath(path)
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected permission error")
+	}
 }
 
 func TestConcurrentConfigReads(t *testing.T) {
 	temp := t.TempDir()
 	path := filepath.Join(temp, "config.toml")
 	cfg := Default()
-	require.NoError(t, cfg.SaveToPath(path))
+	if err := cfg.SaveToPath(path); err != nil {
+		t.Fatalf("SaveToPath: %v", err)
+	}
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, 5)
@@ -141,7 +183,9 @@ func TestConcurrentConfigReads(t *testing.T) {
 	wg.Wait()
 	close(errCh)
 	for err := range errCh {
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("LoadFromPath: %v", err)
+		}
 	}
 }
 
@@ -163,8 +207,12 @@ func TestExpandHome(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ExpandHome(tt.in)
-			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			if err != nil {
+				t.Fatalf("ExpandHome: %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("got %s want %s", got, tt.want)
+			}
 		})
 	}
 }
@@ -175,7 +223,9 @@ func TestExpandHomeError(t *testing.T) {
 	}
 	t.Setenv("HOME", "")
 	_, err := ExpandHome("~/config")
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error when HOME unset")
+	}
 }
 
 func TestConfigExists(t *testing.T) {
@@ -184,13 +234,23 @@ func TestConfigExists(t *testing.T) {
 	xdg.Reload()
 
 	exists, err := ConfigExists()
-	require.NoError(t, err)
-	require.False(t, exists)
+	if err != nil {
+		t.Fatalf("ConfigExists: %v", err)
+	}
+	if exists {
+		t.Fatalf("expected config to be absent")
+	}
 
 	cfg := Default()
-	require.NoError(t, cfg.Save())
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
 
 	exists, err = ConfigExists()
-	require.NoError(t, err)
-	require.True(t, exists)
+	if err != nil {
+		t.Fatalf("ConfigExists: %v", err)
+	}
+	if !exists {
+		t.Fatalf("expected config to exist")
+	}
 }

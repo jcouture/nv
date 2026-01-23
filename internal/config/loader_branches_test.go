@@ -22,13 +22,13 @@ package config
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/adrg/xdg"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLoadConfigExistsInvalid(t *testing.T) {
@@ -38,12 +38,20 @@ func TestLoadConfigExistsInvalid(t *testing.T) {
 	xdg.Reload()
 
 	path, err := GetConfigPath()
-	require.NoError(t, err)
-	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o750))
-	require.NoError(t, os.WriteFile(path, []byte("[general]\nverbosity=\n"), 0o600))
+	if err != nil {
+		t.Fatalf("GetConfigPath: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		t.Fatalf("create config dir: %v", err)
+	}
+	if err := os.WriteFile(path, []byte("[general]\nverbosity=\n"), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	cfg := Load()
-	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
+	if cfg.General.Verbosity != Default().General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, Default().General.Verbosity)
+	}
 }
 
 func TestLoadConfigExistsValid(t *testing.T) {
@@ -54,10 +62,37 @@ func TestLoadConfigExistsValid(t *testing.T) {
 
 	cfg := Default()
 	cfg.General.Verbosity = 2
-	require.NoError(t, cfg.Save())
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
 
 	loaded := Load()
-	require.Equal(t, 2, loaded.General.Verbosity)
+	if loaded.General.Verbosity != 2 {
+		t.Fatalf("verbosity=%d want 2", loaded.General.Verbosity)
+	}
+}
+
+func TestLoadCreatesDefaultConfigWhenNoLegacy(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
+	xdg.Reload()
+
+	path, err := GetConfigPath()
+	if err != nil {
+		t.Fatalf("GetConfigPath: %v", err)
+	}
+	_, err = os.Stat(path)
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected not exist error, got %v", err)
+	}
+
+	_ = Load()
+
+	_, err = os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat config: %v", err)
+	}
 }
 
 func TestLoadIgnoresInvalidLegacy(t *testing.T) {
@@ -67,41 +102,57 @@ func TestLoadIgnoresInvalidLegacy(t *testing.T) {
 	xdg.Reload()
 
 	legacyPath := filepath.Join(tmpDir, ".nv")
-	require.NoError(t, os.WriteFile(legacyPath, []byte("INVALID"), 0o600))
+	if err := os.WriteFile(legacyPath, []byte("INVALID"), 0o600); err != nil {
+		t.Fatalf("write legacy: %v", err)
+	}
 
 	oldStdin := os.Stdin
 	r, w, err := os.Pipe()
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
 	_, err = io.Copy(w, bytes.NewBufferString("y\n"))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("write to pipe: %v", err)
+	}
 	w.Close()
 	os.Stdin = r
 	t.Cleanup(func() { os.Stdin = oldStdin })
 
 	cfg := Load()
-	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
+	if cfg.General.Verbosity != Default().General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, Default().General.Verbosity)
+	}
 }
 
 func TestConfigExistsError(t *testing.T) {
 	tmpDir := t.TempDir()
 	badHome := filepath.Join(tmpDir, "bad")
-	require.NoError(t, os.WriteFile(badHome, []byte("file"), 0o600))
+	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
+		t.Fatalf("write bad home: %v", err)
+	}
 	t.Setenv("XDG_CONFIG_HOME", badHome)
 	xdg.Reload()
 
 	_, err := ConfigExists()
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error from ConfigExists")
+	}
 }
 
 func TestLoadReturnsDefaultOnError(t *testing.T) {
 	tmpDir := t.TempDir()
 	badHome := filepath.Join(tmpDir, "bad")
-	require.NoError(t, os.WriteFile(badHome, []byte("file"), 0o600))
+	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
+		t.Fatalf("write bad home: %v", err)
+	}
 	t.Setenv("XDG_CONFIG_HOME", badHome)
 	xdg.Reload()
 
 	cfg := Load()
-	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
+	if cfg.General.Verbosity != Default().General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, Default().General.Verbosity)
+	}
 }
 
 func TestLoadConfigHomeError(t *testing.T) {
@@ -110,5 +161,7 @@ func TestLoadConfigHomeError(t *testing.T) {
 
 	xdg.ConfigHome = ""
 	cfg := Load()
-	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
+	if cfg.General.Verbosity != Default().General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, Default().General.Verbosity)
+	}
 }
