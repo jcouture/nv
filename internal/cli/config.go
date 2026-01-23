@@ -390,8 +390,6 @@ func loadConfigForWrite() (*config.Config, error) {
 
 func getConfigValue(cfg *config.Config, key string) (string, error) {
 	switch key {
-	case "general.auto_validate":
-		return strconv.FormatBool(cfg.General.AutoValidate), nil
 	case "general.verbosity":
 		return strconv.Itoa(cfg.General.Verbosity), nil
 	case "defaults.env_file":
@@ -423,12 +421,6 @@ func getConfigValue(cfg *config.Config, key string) (string, error) {
 
 func setConfigValue(cfg *config.Config, key string, value string) error {
 	switch key {
-	case "general.auto_validate":
-		parsed, err := strconv.ParseBool(value)
-		if err != nil {
-			return err
-		}
-		cfg.General.AutoValidate = parsed
 	case "general.verbosity":
 		parsed, err := strconv.Atoi(value)
 		if err != nil {

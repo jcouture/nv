@@ -32,8 +32,7 @@ type Config struct {
 var verbosityOverride int
 
 type GeneralConfig struct {
-	AutoValidate bool `toml:"auto_validate"`
-	Verbosity    int  `toml:"verbosity"`
+	Verbosity int `toml:"verbosity"`
 }
 
 type DefaultsConfig struct {

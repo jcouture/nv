@@ -99,7 +99,7 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 		opts.dryRun = cfg.Defaults.DryRun
 	}
 	if !flags.Changed("validate") {
-		opts.validate = cfg.Validation.Enabled || cfg.General.AutoValidate
+		opts.validate = cfg.Validation.Enabled
 	}
 	if !flags.Changed("schema") && !flags.Changed("schema-file") {
 		opts.schemaFile = cfg.Validation.SchemaFile

@@ -42,9 +42,6 @@ func TestSetConfigValueParseErrors(t *testing.T) {
 	err := setConfigValue(cfg, "general.verbosity", "nope")
 	require.Error(t, err)
 
-	err = setConfigValue(cfg, "general.auto_validate", "nope")
-	require.Error(t, err)
-
 	err = setConfigValue(cfg, "defaults.auto_local", "nope")
 	require.Error(t, err)
 
@@ -83,7 +80,6 @@ func TestConfigValueRoundTrip(t *testing.T) {
 	cfg := config.Default()
 
 	updates := map[string]string{
-		"general.auto_validate":  "true",
 		"general.verbosity":      "2",
 		"defaults.env_file":      ".env.custom",
 		"defaults.auto_local":    "false",

@@ -31,8 +31,7 @@ func Default() *Config {
 
 func DefaultGeneral() GeneralConfig {
 	return GeneralConfig{
-		AutoValidate: false,
-		Verbosity:    1,
+		Verbosity: 1,
 	}
 }
 
