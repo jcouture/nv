@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLoadWithMigrationConfigExistsInvalid(t *testing.T) {
+func TestLoadConfigExistsInvalid(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
@@ -42,13 +42,11 @@ func TestLoadWithMigrationConfigExistsInvalid(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o750))
 	require.NoError(t, os.WriteFile(path, []byte("[general]\nverbosity=\n"), 0o600))
 
-	cfg, migrated, err := LoadWithMigration()
-	require.NoError(t, err)
-	require.False(t, migrated)
+	cfg := Load()
 	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
 }
 
-func TestLoadWithMigrationConfigExistsValid(t *testing.T) {
+func TestLoadConfigExistsValid(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
@@ -58,13 +56,11 @@ func TestLoadWithMigrationConfigExistsValid(t *testing.T) {
 	cfg.General.Verbosity = 2
 	require.NoError(t, cfg.Save())
 
-	loaded, migrated, err := LoadWithMigration()
-	require.NoError(t, err)
-	require.False(t, migrated)
+	loaded := Load()
 	require.Equal(t, 2, loaded.General.Verbosity)
 }
 
-func TestLoadWithMigrationAcceptInvalidLegacy(t *testing.T) {
+func TestLoadIgnoresInvalidLegacy(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
@@ -82,9 +78,7 @@ func TestLoadWithMigrationAcceptInvalidLegacy(t *testing.T) {
 	os.Stdin = r
 	t.Cleanup(func() { os.Stdin = oldStdin })
 
-	cfg, migrated, err := LoadWithMigration()
-	require.NoError(t, err)
-	require.False(t, migrated)
+	cfg := Load()
 	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
 }
 
@@ -99,16 +93,6 @@ func TestConfigExistsError(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestLegacyEnvExistsError(t *testing.T) {
-	tmpDir := t.TempDir()
-	badHome := filepath.Join(tmpDir, "bad")
-	require.NoError(t, os.WriteFile(badHome, []byte("file"), 0o600))
-	t.Setenv("HOME", badHome)
-
-	_, err := LegacyEnvExists()
-	require.Error(t, err)
-}
-
 func TestLoadReturnsDefaultOnError(t *testing.T) {
 	tmpDir := t.TempDir()
 	badHome := filepath.Join(tmpDir, "bad")
@@ -120,13 +104,11 @@ func TestLoadReturnsDefaultOnError(t *testing.T) {
 	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
 }
 
-func TestLoadWithMigrationConfigHomeError(t *testing.T) {
+func TestLoadConfigHomeError(t *testing.T) {
 	orig := xdg.ConfigHome
 	t.Cleanup(func() { xdg.ConfigHome = orig })
 
 	xdg.ConfigHome = ""
-	cfg, migrated, err := LoadWithMigration()
-	require.Error(t, err)
-	require.False(t, migrated)
+	cfg := Load()
 	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
 }

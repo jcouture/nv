@@ -29,7 +29,7 @@ func TestExecuteCommandUnknown(t *testing.T) {
 	origArgs := os.Args
 	t.Cleanup(func() { os.Args = origArgs })
 
-	os.Args = []string{"nvx", "does-not-exist"}
+	os.Args = []string{"nv", "does-not-exist"}
 	code := executeCommand("")
 	if code == 0 {
 		t.Fatalf("expected non-zero exit code")
@@ -40,7 +40,7 @@ func TestExecuteCommandVersion(t *testing.T) {
 	origArgs := os.Args
 	t.Cleanup(func() { os.Args = origArgs })
 
-	os.Args = []string{"nvx", "version"}
+	os.Args = []string{"nv", "version"}
 	code := executeCommand("")
 	if code != 0 {
 		t.Fatalf("expected zero exit code")
@@ -62,7 +62,7 @@ func TestExecuteUsesExitFunc(t *testing.T) {
 		exitFunc = origExit
 	})
 
-	os.Args = []string{"nvx", "version"}
+	os.Args = []string{"nv", "version"}
 	exitCode := -1
 	exitFunc = func(code int) {
 		exitCode = code
@@ -82,7 +82,7 @@ func TestExecuteUsesExitFuncOnError(t *testing.T) {
 		exitFunc = origExit
 	})
 
-	os.Args = []string{"nvx", "does-not-exist"}
+	os.Args = []string{"nv", "does-not-exist"}
 	exitCode := -1
 	exitFunc = func(code int) {
 		exitCode = code

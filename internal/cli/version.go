@@ -69,7 +69,7 @@ func runVersion(opts *versionOptions) error {
 		enc := json.NewEncoder(os.Stdout)
 		return enc.Encode(data)
 	case "text":
-		fmt.Fprintf(os.Stdout, "nvx version %s\n", Version)
+		fmt.Fprintf(os.Stdout, "nv version %s\n", Version)
 		fmt.Fprintf(os.Stdout, "commit: %s\n", Commit)
 		fmt.Fprintf(os.Stdout, "built: %s\n", BuildDate)
 		fmt.Fprintf(os.Stdout, "go: %s\n", runtime.Version())

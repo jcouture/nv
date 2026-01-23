@@ -79,18 +79,6 @@ func TestLoadFromPathInvalidValuesFixes(t *testing.T) {
 	require.Empty(t, cfg.Globals.Env)
 }
 
-func TestLoadWithMigrationNoConfig(t *testing.T) {
-	temp := t.TempDir()
-	t.Setenv("HOME", temp)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(temp, "xdg"))
-	xdg.Reload()
-
-	cfg, migrated, err := LoadWithMigration()
-	require.NoError(t, err)
-	require.False(t, migrated)
-	require.Equal(t, Default().General.Verbosity, cfg.General.Verbosity)
-}
-
 func TestSaveToPathCreatesDir(t *testing.T) {
 	temp := t.TempDir()
 	path := filepath.Join(temp, "nested", "config.toml")
@@ -187,24 +175,6 @@ func TestExpandHomeError(t *testing.T) {
 	}
 	t.Setenv("HOME", "")
 	_, err := ExpandHome("~/config")
-	require.Error(t, err)
-}
-
-func TestGetLegacyEnvPath(t *testing.T) {
-	temp := t.TempDir()
-	t.Setenv("HOME", temp)
-
-	path, err := GetLegacyEnvPath()
-	require.NoError(t, err)
-	require.Equal(t, filepath.Join(temp, ".nv"), path)
-}
-
-func TestGetLegacyEnvPathError(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("home dir resolution differs on windows")
-	}
-	t.Setenv("HOME", "")
-	_, err := GetLegacyEnvPath()
 	require.Error(t, err)
 }
 

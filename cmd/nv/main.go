@@ -1,4 +1,4 @@
-// Copyright 2015-2025 Jean-Philippe Couture
+// Copyright (c) 2020-2025 Jonathan Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,89 +20,8 @@
 
 package main
 
-import (
-	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-	"syscall"
-
-	"github.com/jcouture/nv/internal/build"
-	"github.com/jcouture/nv/internal/sys"
-	"github.com/jcouture/nv/pkg/env"
-)
-
-var (
-	exitFunc     = os.Exit
-	execFunc     = syscall.Exec
-	lookPathFunc = exec.LookPath
-	setvarsFunc  = env.Setvars
-)
+import "github.com/jcouture/nv/internal/cli"
 
 func main() {
-	exitFunc(run(os.Args))
-}
-
-func run(args []string) int {
-	if len(args) == 2 {
-		cmd := args[1]
-		switch cmd {
-		case "-v", "version", "-version", "--version":
-			printVersion()
-		default:
-			printHelp()
-		}
-		return 0
-	}
-
-	if len(args) < 3 {
-		printHelp()
-		return 0
-	}
-
-	filenames := strings.Split(args[1], ",")
-	cmd := args[2]
-	cmdArgs := args[2:]
-
-	base := make(map[string]string)
-	for _, filename := range filenames {
-		override, err := sys.ReadVarsFromFile(filename)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			return -1
-		}
-		base = env.Join(base, override)
-	}
-
-	base = env.Join(base, sys.ReadGlobalVars())
-
-	if err := env.Clear("PATH"); err != nil {
-		fmt.Printf("%s\n", err)
-		return -1
-	}
-	if err := setvarsFunc(base); err != nil {
-		fmt.Printf("%s\n", err)
-		return -1
-	}
-
-	bin, err := lookPathFunc(cmd)
-	if err != nil {
-		bin = cmd
-	}
-
-	// #nosec G204 -- executing the user-specified command is the core behavior.
-	if err := execFunc(bin, cmdArgs, os.Environ()); err != nil {
-		fmt.Println("cannot execute:", bin)
-		return -1
-	}
-	return 0
-}
-
-func printHelp() {
-	fmt.Printf("usage: nv [--version] [--help]\n")
-	fmt.Printf("          <env files> <command> [arguments...]\n")
-}
-
-func printVersion() {
-	fmt.Printf("nv version %s\n", build.Version)
+	cli.Execute()
 }

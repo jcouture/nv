@@ -44,7 +44,7 @@ func (e exitError) Error() string {
 
 func NewRootCmd(name string) *cobra.Command {
 	if name == "" {
-		name = "nvx"
+		name = "nv"
 	}
 	var noColor bool
 	var verbose bool
@@ -77,8 +77,7 @@ func NewRootCmd(name string) *cobra.Command {
 }
 
 func Execute() {
-	name := os.Getenv("NVX_COMMAND_NAME")
-	exitCode := executeCommand(name)
+	exitCode := executeCommand("")
 	if exitCode != 0 {
 		exitFunc(exitCode)
 	}

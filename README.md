@@ -9,18 +9,7 @@
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge)](http://godoc.org/github.com/jcouture/nv)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jcouture/nv?style=for-the-badge)](https://https://goreportcard.com/badge/github.com/jcouture/nv)
 
-`nv` is a tiny tool that loads environment variables from `.env` files and runs your command with them. Use it when you want predictable, explicit env handling for a single command or script.
-
-This repo ships two CLIs:
-
-- `nvx` is the current, feature-rich CLI. Use this for new projects.
-- `nv` is the legacy v2-compatible CLI with the original UX.
-
-Both tools build a clean environment and then run your command. By default, `nvx` keeps `$PATH`, `$HOME`, and `$USER`, while legacy `nv` keeps only `$PATH`.
-
-**Note (legacy nv)**
-
-If you are using a version manager such as [asdf](https://asdf-vm.com), both `$HOME` and `$USER` could be required. See [Troubleshooting](#troubleshooting-legacy-nv).
+`nv` is a tiny tool that loads environment variables from `.env` files and runs your command with them. Use it when you want predictable, explicit env handling for a single command or script. v3 is the next iteration and replaces the old nv/nvx split; if you want to stick to v2, pin an older release via Homebrew.
 
 ## Quick start
 
@@ -37,22 +26,17 @@ Linux/Windows/macOS (binary):
 ### 2) Run a command with `.env`
 
 ```sh
-nvx run -e .env -- ./myapp
+nv run -e .env -- ./myapp
 ```
 
-That is it. `nvx` loads variables from `.env` and runs your command with them.
+That is it. `nv` loads variables from `.env` and runs your command with them.
 
-## Which binary should I use?
-
-- Use `nvx` for new projects and richer features.
-- Use `nv` if you want the v2 UX and behavior.
-
-## Common tasks (nvx)
+## Common tasks
 
 ### Load multiple env files
 
 ```sh
-nvx run -e .env -e .env.local -- ./myapp
+nv run -e .env -e .env.local -- ./myapp
 ```
 
 Note: when you pass one or more `-e/--env-file`, cascading is automatically disabled (with a warning) so only the explicit files are used. Use `--cascade` without `-e` when you want the cascade chain (`.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`).
@@ -62,25 +46,25 @@ Note: when you pass one or more `-e/--env-file`, cascading is automatically disa
 Loads `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`:
 
 ```sh
-nvx run --cascade --env=production -- ./deploy.sh
+nv run --cascade --env=production -- ./deploy.sh
 ```
 
 ### Override values inline
 
 ```sh
-nvx run -e .env -o PORT=4200 -- ./myapp
+nv run -e .env -o PORT=4200 -- ./myapp
 ```
 
 ### Preview what will be set
 
 ```sh
-nvx run -e .env --dry-run -- ./myapp
+nv run -e .env --dry-run -- ./myapp
 ```
 
 ### Export for another tool
 
 ```sh
-nvx export -e .env --format=json
+nv export -e .env --format=json
 ```
 
 ### Validate against a schema
@@ -88,7 +72,7 @@ nvx export -e .env --format=json
 Default schema is `.env.example`:
 
 ```sh
-nvx validate -e .env
+nv validate -e .env
 ```
 
 Schema example:
@@ -101,29 +85,31 @@ OPTIONAL=
 ### Print the current environment
 
 ```sh
-nvx print --sort
+nv print --sort
 ```
 
-## Configuration (nvx)
+## Configuration
 
-Configuration is optional. When you do want it, `nvx` stores it in `~/.config/nv/config.toml`.
+Configuration is optional. When you do want it, `nv` stores it in `~/.config/nv/config.toml`.
+
+If you still have a legacy `~/.nv` globals file from v2, `nv config migrate` will import it into the config and back up the original to `~/.config/nv/nv.backup`.
 
 ### Quick start
 
 ```sh
-nvx config init    # Create config with defaults
-nvx config show    # View your current config
-nvx config edit    # Edit config in $EDITOR
+nv config init    # Create config with defaults
+nv config show    # View your current config
+nv config edit    # Edit config in $EDITOR
 ```
 
 ### Global variables
 
-Global variables apply to every `nvx` command.
+Global variables apply to every `nv` command.
 
 ```sh
-nvx config globals list
-nvx config globals set AWS_REGION us-east-1
-nvx config globals unset AWS_REGION
+nv config globals list
+nv config globals set AWS_REGION us-east-1
+nv config globals unset AWS_REGION
 ```
 
 ### Priority rules
@@ -139,23 +125,16 @@ When the same variable is defined multiple times, the default order is:
 You can flip the globals priority:
 
 ```sh
-nvx config set globals.priority "last"
+nv config set globals.priority "last"
 ```
 
 What each layer means:
 
 - Command-line arguments: `KEY=value` prefixes on the command you run after `--`, applied by the launched process (highest priority).
-- CLI flags: `-o/--override KEY=value` passed to `nvx`, applied after files and globals.
+- CLI flags: `-o/--override KEY=value` passed to `nv`, applied after files and globals.
 - Cascading files: in cascade mode, loaded in order `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local` (missing files are skipped).
 - Standard files: any `--env-file/-e` files are loaded in the order provided; with `--auto-local` defaults, `.env` is followed by optional `.env.local`.
 - Globals: `[globals.env]` from config; merged before files when `globals.priority=first` (default) or after files when set to `last`.
-
-## Legacy `nv` usage (v2)
-
-```sh
-nv .env rails server -p 2808
-nv .env,.env.dev rails server -p 2808
-```
 
 ## `.env` format supported
 
@@ -166,21 +145,7 @@ nv .env,.env.dev rails server -p 2808
 - Variable interpolation in unquoted and double-quoted values (`$VAR`, `${VAR}`)
 - `PATH` expansions keep references to incoming `PATH`
 
-## Troubleshooting (nvx)
-
-### Legacy `~/.nv` detected
-
-`nvx` can migrate your legacy `~/.nv` file into the config file:
-
-```sh
-nvx config migrate
-```
-
-What happens during migration:
-1. Your `~/.nv` file is parsed
-2. Variables are imported into `[globals]`
-3. A backup is created at `~/.config/nv/nv.backup`
-4. The original `~/.nv` file is removed
+## Troubleshooting
 
 ### Permission denied accessing config
 
@@ -191,24 +156,14 @@ chmod 644 ~/.config/nv/config.toml
 ### Config file corrupted
 
 ```sh
-nvx config validate
-nvx config reset
+nv config validate
+nv config reset
 ```
 
 ### Restore from backup
 
 ```sh
 cp ~/.config/nv/nv.backup ~/.config/nv/config.toml
-```
-
-## Troubleshooting (legacy nv)
-
-If you rely on shims or TTY tools, add these to `~/.nv`:
-
-```
-HOME=<your home directory>
-USER=<your username>
-TERM=xterm-color
 ```
 
 ## Build from source

@@ -1,5 +1,4 @@
 BIN_DIR ?= bin
-BIN_NVX ?= $(BIN_DIR)/nvx
 BIN_NV ?= $(BIN_DIR)/nv
 
 GOFLAGS ?= -trimpath -buildvcs=false
@@ -46,19 +45,16 @@ fuzz:
 		done; \
 	done
 
-## Build both nvx and nv binaries
+## Build nv binary
 build:
 	@mkdir -p $(BIN_DIR) $(GOCACHE_DIR)
-	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN_NVX) ./cmd/nvx
 	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN_NV) ./cmd/nv
-	@echo "Built $(BIN_NVX)"
 	@echo "Built $(BIN_NV)"
 
-## Install nvx and nv to GOPATH/bin
+## Install nv to GOPATH/bin
 install:
-	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) ./cmd/nvx
 	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) ./cmd/nv
-	@echo "Installed nvx and nv to $$(go env GOPATH)/bin"
+	@echo "Installed nv to $$(go env GOPATH)/bin"
 
 ## Format code (writes changes)
 fmt:

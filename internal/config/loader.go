@@ -134,7 +134,7 @@ func LoadWithMigration() (*Config, bool, error) {
 		cfg, err := LoadFromPath(path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to parse config file, using defaults: %v\n", err)
-			fmt.Fprintln(os.Stderr, "To fix: nvx config validate")
+			fmt.Fprintln(os.Stderr, "To fix: nv config validate")
 			return Default(), false, nil
 		}
 		return cfg, false, nil
@@ -154,8 +154,8 @@ func LoadWithMigration() (*Config, bool, error) {
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Migration failed: %v\n", err)
 				fmt.Fprintln(os.Stderr, "Your ~/.nv file is unchanged. You can:")
-				fmt.Fprintln(os.Stderr, "  - Try again: nvx config migrate")
-				fmt.Fprintln(os.Stderr, "  - Manually edit config: nvx config edit")
+				fmt.Fprintln(os.Stderr, "  - Try again: nv config migrate")
+				fmt.Fprintln(os.Stderr, "  - Manually edit config: nv config edit")
 				fmt.Fprintln(os.Stderr, "  - Continue using ~/.nv (not recommended)")
 				return Default(), false, nil
 			}
@@ -175,12 +175,16 @@ func LoadWithMigration() (*Config, bool, error) {
 			return cfg, false, err
 		}
 		fmt.Fprintln(os.Stderr, "Migration skipped. Your ~/.nv file remains unchanged.")
-		fmt.Fprintln(os.Stderr, "To migrate later, run: nvx config migrate")
-		fmt.Fprintln(os.Stderr, "To use nvx without ~/.nv, delete it manually.")
+		fmt.Fprintln(os.Stderr, "To migrate later, run: nv config migrate")
+		fmt.Fprintln(os.Stderr, "To use nv without ~/.nv, delete it manually.")
 		return cfg, false, nil
 	}
 
-	return Default(), false, nil
+	cfg := Default()
+	if err := cfg.Save(); err != nil {
+		return cfg, false, err
+	}
+	return cfg, false, nil
 }
 
 func LoadFromPath(path string) (*Config, error) {
