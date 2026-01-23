@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/fatih/color"
 	"github.com/jcouture/nv/internal/config"
 	"github.com/jcouture/nv/internal/loader"
 )
@@ -108,13 +109,13 @@ func loadEnvironment(opts envOptions) (map[string]string, error) {
 	}
 
 	if (opts.verbose || opts.trace) && len(changes) > 0 {
-		fmt.Fprintln(os.Stderr, "Applying overrides:")
+		_, _ = color.New(color.FgHiBlue).Fprintln(os.Stderr, "Applying overrides:")
 		for _, change := range changes {
 			if change.exists {
-				fmt.Fprintf(os.Stderr, "  %s overridden\n", change.key)
+				_, _ = color.New(color.FgYellow).Fprintf(os.Stderr, "  %s overridden\n", change.key)
 				continue
 			}
-			fmt.Fprintf(os.Stderr, "  %s added\n", change.key)
+			_, _ = color.New(color.FgGreen).Fprintf(os.Stderr, "  %s added\n", change.key)
 		}
 	}
 
@@ -124,14 +125,14 @@ func loadEnvironment(opts envOptions) (map[string]string, error) {
 func traceLoaderEvent(event loader.TraceEvent) {
 	switch event.Status {
 	case "missing":
-		fmt.Fprintf(os.Stderr, "Skipping missing env file: %s\n", event.File)
+		_, _ = color.New(color.FgYellow).Fprintf(os.Stderr, "Skipping missing env file: %s\n", event.File)
 	case "loaded":
-		fmt.Fprintf(os.Stderr, "Loaded env file: %s\n", event.File)
+		_, _ = color.New(color.FgHiCyan).Fprintf(os.Stderr, "Loaded env file: %s\n", event.File)
 		for key := range event.Overwritten {
-			fmt.Fprintf(os.Stderr, "  %s overridden\n", key)
+			_, _ = color.New(color.FgYellow).Fprintf(os.Stderr, "  %s overridden\n", key)
 		}
 		for key := range event.Added {
-			fmt.Fprintf(os.Stderr, "  %s added\n", key)
+			_, _ = color.New(color.FgGreen).Fprintf(os.Stderr, "  %s added\n", key)
 		}
 	}
 }
@@ -152,11 +153,11 @@ func traceGlobals(env map[string]string, globals map[string]string) {
 		val := globals[key]
 		if prev, ok := env[key]; ok {
 			if prev != val {
-				fmt.Fprintf(os.Stderr, "  %s overridden\n", key)
+				_, _ = color.New(color.FgYellow).Fprintf(os.Stderr, "  %s overridden\n", key)
 			}
 			continue
 		}
-		fmt.Fprintf(os.Stderr, "  %s added\n", key)
+		_, _ = color.New(color.FgGreen).Fprintf(os.Stderr, "  %s added\n", key)
 	}
 }
 
