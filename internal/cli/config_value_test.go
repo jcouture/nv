@@ -48,9 +48,6 @@ func TestSetConfigValueParseErrors(t *testing.T) {
 	err = setConfigValue(cfg, "validation.strict", "nope")
 	require.Error(t, err)
 
-	err = setConfigValue(cfg, "validation.allow_extra", "nope")
-	require.Error(t, err)
-
 	err = setConfigValue(cfg, "defaults.dry_run", "nope")
 	require.Error(t, err)
 }
@@ -88,7 +85,6 @@ func TestConfigValueRoundTrip(t *testing.T) {
 		"validation.enabled":     "true",
 		"validation.schema_file": ".env.schema",
 		"validation.strict":      "false",
-		"validation.allow_extra": "false",
 		"globals.priority":       "last",
 	}
 

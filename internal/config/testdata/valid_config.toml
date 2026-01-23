@@ -11,7 +11,6 @@ dry_run = true
 enabled = true
 schema_file = ".env.schema"
 strict = false
-allow_extra = false
 
 [globals]
 priority = "last"

@@ -406,8 +406,6 @@ func getConfigValue(cfg *config.Config, key string) (string, error) {
 		return cfg.Validation.SchemaFile, nil
 	case "validation.strict":
 		return strconv.FormatBool(cfg.Validation.Strict), nil
-	case "validation.allow_extra":
-		return strconv.FormatBool(cfg.Validation.AllowExtra), nil
 	case "globals.priority":
 		return cfg.Globals.Priority, nil
 	default:
@@ -461,12 +459,6 @@ func setConfigValue(cfg *config.Config, key string, value string) error {
 			return err
 		}
 		cfg.Validation.Strict = parsed
-	case "validation.allow_extra":
-		parsed, err := strconv.ParseBool(value)
-		if err != nil {
-			return err
-		}
-		cfg.Validation.AllowExtra = parsed
 	case "globals.priority":
 		cfg.Globals.Priority = value
 	default:
