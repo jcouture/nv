@@ -104,6 +104,35 @@ func TestPreservedEnvWithCustomVar(t *testing.T) {
 	}
 }
 
+func TestWithTracer(t *testing.T) {
+	called := false
+	l := New(WithTracer(func(event TraceEvent) {
+		called = true
+	}))
+
+	_, err := l.LoadFilesWithEnv(map[string]string{"BASE": "1"}, t.TempDir())
+	if err == nil {
+		t.Fatal("expected error for missing env file")
+	}
+	if called {
+		t.Fatal("expected tracer not to be called on error")
+	}
+
+	file := filepath.Join(t.TempDir(), ".env")
+	if err := os.WriteFile(file, []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	called = false
+	_, err = l.LoadFilesWithEnv(map[string]string{"BASE": "1"}, file)
+	if err != nil {
+		t.Fatalf("LoadFilesWithEnv error: %v", err)
+	}
+	if !called {
+		t.Fatal("expected tracer to be called when file loads")
+	}
+}
+
 func TestLoadFilesWithEnvNilPreserves(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, ".env")
