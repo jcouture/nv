@@ -15,10 +15,6 @@ schema_file = ".env.schema"
 strict = false
 allow_extra = false
 
-[paths]
-detect_path_modifications = false
-path_strategy = "append"
-
 [globals]
 priority = "last"
 

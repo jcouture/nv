@@ -28,9 +28,6 @@ import (
 func (c *Config) Validate() []error {
 	var errs []error
 
-	if err := ValidatePathStrategy(c.Paths.PathStrategy); err != nil {
-		errs = append(errs, err)
-	}
 	if err := ValidateGlobalsPriority(c.Globals.Priority); err != nil {
 		errs = append(errs, err)
 	}
@@ -42,15 +39,6 @@ func (c *Config) Validate() []error {
 	}
 
 	return errs
-}
-
-func ValidatePathStrategy(strategy string) error {
-	switch strategy {
-	case PathStrategyPrepend, PathStrategyAppend, PathStrategyReplace:
-		return nil
-	default:
-		return fmt.Errorf("invalid path strategy: %s", strategy)
-	}
 }
 
 func ValidateGlobalsPriority(priority string) error {
@@ -92,10 +80,6 @@ func (c *Config) Fix() (*Config, []string) {
 	var fields []string
 	defaults := Default()
 
-	if err := ValidatePathStrategy(fixed.Paths.PathStrategy); err != nil {
-		fixed.Paths.PathStrategy = defaults.Paths.PathStrategy
-		fields = append(fields, "paths.path_strategy")
-	}
 	if err := ValidateGlobalsPriority(fixed.Globals.Priority); err != nil {
 		fixed.Globals.Priority = defaults.Globals.Priority
 		fields = append(fields, "globals.priority")

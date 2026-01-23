@@ -412,10 +412,6 @@ func getConfigValue(cfg *config.Config, key string) (string, error) {
 		return strconv.FormatBool(cfg.Validation.Strict), nil
 	case "validation.allow_extra":
 		return strconv.FormatBool(cfg.Validation.AllowExtra), nil
-	case "paths.detect_path_modifications":
-		return strconv.FormatBool(cfg.Paths.DetectPathModifications), nil
-	case "paths.path_strategy":
-		return cfg.Paths.PathStrategy, nil
 	case "globals.priority":
 		return cfg.Globals.Priority, nil
 	default:
@@ -487,14 +483,6 @@ func setConfigValue(cfg *config.Config, key string, value string) error {
 			return err
 		}
 		cfg.Validation.AllowExtra = parsed
-	case "paths.detect_path_modifications":
-		parsed, err := strconv.ParseBool(value)
-		if err != nil {
-			return err
-		}
-		cfg.Paths.DetectPathModifications = parsed
-	case "paths.path_strategy":
-		cfg.Paths.PathStrategy = value
 	case "globals.priority":
 		cfg.Globals.Priority = value
 	default:

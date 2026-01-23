@@ -136,7 +136,7 @@ func TestConfigValidate(t *testing.T) {
 	path, err := config.GetConfigPath()
 	require.NoError(t, err)
 	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o750))
-	require.NoError(t, os.WriteFile(path, []byte("[paths]\npath_strategy=\"bad\"\n"), 0o600))
+	require.NoError(t, os.WriteFile(path, []byte("[globals]\npriority=\"bad\"\n"), 0o600))
 
 	validateCmd := newConfigValidateCmd()
 	err = validateCmd.RunE(validateCmd, nil)

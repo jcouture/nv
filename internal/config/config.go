@@ -24,7 +24,6 @@ type Config struct {
 	General    GeneralConfig    `toml:"general"`
 	Defaults   DefaultsConfig   `toml:"defaults"`
 	Validation ValidationConfig `toml:"validation"`
-	Paths      PathsConfig      `toml:"paths"`
 	Globals    GlobalsConfig    `toml:"globals"`
 
 	defined map[string]bool
@@ -52,21 +51,12 @@ type ValidationConfig struct {
 	AllowExtra bool   `toml:"allow_extra"`
 }
 
-type PathsConfig struct {
-	DetectPathModifications bool   `toml:"detect_path_modifications"`
-	PathStrategy            string `toml:"path_strategy"`
-}
-
 type GlobalsConfig struct {
 	Priority string            `toml:"priority"`
 	Env      map[string]string `toml:"env,omitempty"`
 }
 
 const (
-	PathStrategyPrepend = "prepend"
-	PathStrategyAppend  = "append"
-	PathStrategyReplace = "replace"
-
 	GlobalsPriorityFirst = "first"
 	GlobalsPriorityLast  = "last"
 )
