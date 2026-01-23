@@ -100,3 +100,17 @@ func TestConfigGlobalsEmpty(t *testing.T) {
 		t.Fatalf("expected empty env, got %v", got)
 	}
 }
+
+func TestVerbosityOverride(t *testing.T) {
+	t.Cleanup(ClearVerbosityOverride)
+
+	SetVerbosityOverride(3)
+	if got := GetVerbosityOverride(); got != 3 {
+		t.Fatalf("override=%d want 3", got)
+	}
+
+	ClearVerbosityOverride()
+	if got := GetVerbosityOverride(); got != 0 {
+		t.Fatalf("override=%d want 0 after clear", got)
+	}
+}
