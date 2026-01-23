@@ -22,9 +22,8 @@ package sys
 
 import (
 	"os"
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestReadVarsFromFile(t *testing.T) {
@@ -43,10 +42,16 @@ func TestReadVarsFromFile(t *testing.T) {
 		t.Run(tt.description, func(t *testing.T) {
 			result, err := ReadVarsFromFile(tt.input)
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Fatal("expected error")
+				}
 			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
+				if err != nil {
+					t.Fatalf("ReadVarsFromFile: %v", err)
+				}
+				if !reflect.DeepEqual(tt.expected, result) {
+					t.Fatalf("result=%v want %v", result, tt.expected)
+				}
 			}
 		})
 	}
@@ -75,7 +80,9 @@ func TestCurrentEnv(t *testing.T) {
 
 			got := currentEnv()
 			for k, v := range tc.env {
-				assert.Equal(t, v, got[k])
+				if got[k] != v {
+					t.Fatalf("%s=%s want %s", k, got[k], v)
+				}
 			}
 		})
 	}
@@ -107,7 +114,9 @@ func TestReadGlobalVars(t *testing.T) {
 
 			if tc.fileContent != "" {
 				nvPath := tempHome + "/.nv"
-				assert.NoError(t, os.WriteFile(nvPath, []byte(tc.fileContent), 0o600))
+				if err := os.WriteFile(nvPath, []byte(tc.fileContent), 0o600); err != nil {
+					t.Fatalf("write .nv: %v", err)
+				}
 			}
 
 			for k, v := range tc.env {
@@ -115,7 +124,9 @@ func TestReadGlobalVars(t *testing.T) {
 			}
 
 			got := ReadGlobalVars()
-			assert.Equal(t, tc.expect, got)
+			if !reflect.DeepEqual(tc.expect, got) {
+				t.Fatalf("got %v want %v", got, tc.expect)
+			}
 		})
 	}
 }

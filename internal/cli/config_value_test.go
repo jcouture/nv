@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/jcouture/nv/internal/config"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetConfigValueGlobalsEnv(t *testing.T) {
@@ -32,46 +31,70 @@ func TestGetConfigValueGlobalsEnv(t *testing.T) {
 	cfg.Globals.Env["FOO"] = "bar"
 
 	val, err := getConfigValue(cfg, "globals.env.FOO")
-	require.NoError(t, err)
-	require.Equal(t, "bar", val)
+	if err != nil {
+		t.Fatalf("getConfigValue: %v", err)
+	}
+	if val != "bar" {
+		t.Fatalf("val=%s want bar", val)
+	}
 }
 
 func TestSetConfigValueParseErrors(t *testing.T) {
 	cfg := config.Default()
 
 	err := setConfigValue(cfg, "general.verbosity", "nope")
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error for general.verbosity")
+	}
 
 	err = setConfigValue(cfg, "defaults.auto_local", "nope")
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error for defaults.auto_local")
+	}
 
 	err = setConfigValue(cfg, "validation.strict", "nope")
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error for validation.strict")
+	}
 
 	err = setConfigValue(cfg, "defaults.dry_run", "nope")
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error for defaults.dry_run")
+	}
 }
 
 func TestSetConfigValueGlobalsEnv(t *testing.T) {
 	cfg := config.Default()
 	err := setConfigValue(cfg, "globals.env.NEW", "value")
-	require.NoError(t, err)
-	require.Equal(t, "value", cfg.Globals.Env["NEW"])
+	if err != nil {
+		t.Fatalf("setConfigValue: %v", err)
+	}
+	if cfg.Globals.Env["NEW"] != "value" {
+		t.Fatalf("NEW=%s want value", cfg.Globals.Env["NEW"])
+	}
 }
 
 func TestSetConfigValueGlobalsEnvNilMap(t *testing.T) {
 	cfg := config.Default()
 	cfg.Globals.Env = nil
 	err := setConfigValue(cfg, "globals.env.NEW", "value")
-	require.NoError(t, err)
-	require.Equal(t, "value", cfg.Globals.Env["NEW"])
+	if err != nil {
+		t.Fatalf("setConfigValue: %v", err)
+	}
+	if cfg.Globals.Env["NEW"] != "value" {
+		t.Fatalf("NEW=%s want value", cfg.Globals.Env["NEW"])
+	}
 }
 
 func TestGetConfigValueGlobalsEnvMissing(t *testing.T) {
 	cfg := config.Default()
 	val, err := getConfigValue(cfg, "globals.env.MISSING")
-	require.NoError(t, err)
-	require.Equal(t, "", val)
+	if err != nil {
+		t.Fatalf("getConfigValue: %v", err)
+	}
+	if val != "" {
+		t.Fatalf("val=%s want empty", val)
+	}
 }
 func TestConfigValueRoundTrip(t *testing.T) {
 	cfg := config.Default()
@@ -89,9 +112,15 @@ func TestConfigValueRoundTrip(t *testing.T) {
 	}
 
 	for key, value := range updates {
-		require.NoError(t, setConfigValue(cfg, key, value))
+		if err := setConfigValue(cfg, key, value); err != nil {
+			t.Fatalf("set %s: %v", key, err)
+		}
 		got, err := getConfigValue(cfg, key)
-		require.NoError(t, err)
-		require.Equal(t, value, got)
+		if err != nil {
+			t.Fatalf("get %s: %v", key, err)
+		}
+		if got != value {
+			t.Fatalf("%s=%s want %s", key, got, value)
+		}
 	}
 }

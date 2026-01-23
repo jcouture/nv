@@ -23,33 +23,38 @@ package cli
 import (
 	"path/filepath"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestAutoLocalForFilesAbsolute(t *testing.T) {
 	dir := t.TempDir()
 	files := []string{filepath.Join(dir, ".env")}
 	out := autoLocalForFiles(files)
-	require.Equal(t, filepath.Join(dir, ".env.local"), out)
+	if out != filepath.Join(dir, ".env.local") {
+		t.Fatalf("out=%s want %s", out, filepath.Join(dir, ".env.local"))
+	}
 }
 
 func TestMergeEnv(t *testing.T) {
 	base := map[string]string{"A": "1"}
 	mergeEnv(base, map[string]string{"B": "2", "A": "3"})
-	require.Equal(t, "3", base["A"])
-	require.Equal(t, "2", base["B"])
+	if base["A"] != "3" || base["B"] != "2" {
+		t.Fatalf("merged base=%v want A=3 B=2", base)
+	}
 }
 
 func TestAutoLocalForFilesNoEnv(t *testing.T) {
 	files := []string{"/tmp/custom.env"}
 	out := autoLocalForFiles(files)
-	require.Empty(t, out)
+	if out != "" {
+		t.Fatalf("expected empty result, got %s", out)
+	}
 }
 
 func TestAutoLocalForFilesAlreadyPresent(t *testing.T) {
 	dir := t.TempDir()
 	files := []string{filepath.Join(dir, ".env"), filepath.Join(dir, ".env.local")}
 	out := autoLocalForFiles(files)
-	require.Empty(t, out)
+	if out != "" {
+		t.Fatalf("expected empty result, got %s", out)
+	}
 }

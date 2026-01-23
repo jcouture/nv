@@ -20,11 +20,7 @@
 
 package config
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-)
+import "testing"
 
 func TestConfigValidation(t *testing.T) {
 	tests := []struct {
@@ -82,9 +78,13 @@ func TestConfigValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			errs := tt.config.Validate()
 			if tt.wantErr {
-				require.Len(t, errs, tt.errCount)
+				if len(errs) != tt.errCount {
+					t.Fatalf("got %d errors, want %d: %v", len(errs), tt.errCount, errs)
+				}
 			} else {
-				require.Empty(t, errs)
+				if len(errs) != 0 {
+					t.Fatalf("expected no errors, got %v", errs)
+				}
 			}
 		})
 	}
@@ -121,9 +121,13 @@ func TestValidateGlobalEnvKeys(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			errs := ValidateGlobalEnvKeys(tt.env)
 			if tt.wantErr {
-				require.NotEmpty(t, errs)
+				if len(errs) == 0 {
+					t.Fatalf("expected errors for %s", tt.name)
+				}
 			} else {
-				require.Empty(t, errs)
+				if len(errs) != 0 {
+					t.Fatalf("unexpected errors: %v", errs)
+				}
 			}
 		})
 	}
@@ -141,8 +145,16 @@ func TestConfigFix(t *testing.T) {
 	fixed, fields := cfg.Fix()
 	defaults := Default()
 
-	require.Equal(t, defaults.General.Verbosity, fixed.General.Verbosity)
-	require.Equal(t, defaults.Globals.Priority, fixed.Globals.Priority)
-	require.Empty(t, fixed.Globals.Env)
-	require.NotEmpty(t, fields)
+	if fixed.General.Verbosity != defaults.General.Verbosity {
+		t.Fatalf("verbosity=%d want %d", fixed.General.Verbosity, defaults.General.Verbosity)
+	}
+	if fixed.Globals.Priority != defaults.Globals.Priority {
+		t.Fatalf("priority=%s want %s", fixed.Globals.Priority, defaults.Globals.Priority)
+	}
+	if len(fixed.Globals.Env) != 0 {
+		t.Fatalf("expected cleared env, got %v", fixed.Globals.Env)
+	}
+	if len(fields) == 0 {
+		t.Fatal("expected fields to be reported")
+	}
 }

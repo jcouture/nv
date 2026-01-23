@@ -20,23 +20,34 @@
 
 package env
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-)
+import "testing"
 
 func TestExistsGetvarsGetnames(t *testing.T) {
-	t.Setenv("NVX_ENV_TEST", "value")
+	t.Setenv("NV_ENV_TEST", "value")
 
-	require.True(t, Exists("NVX_ENV_TEST"))
-	require.False(t, Exists("NVX_ENV_MISSING"))
+	if !Exists("NV_ENV_TEST") {
+		t.Fatal("expected NV_ENV_TEST to exist")
+	}
+	if Exists("NV_ENV_MISSING") {
+		t.Fatal("expected NV_ENV_MISSING to be absent")
+	}
 
 	vars := Getvars()
-	require.Equal(t, "value", vars["NVX_ENV_TEST"])
+	if vars["NV_ENV_TEST"] != "value" {
+		t.Fatalf("NV_ENV_TEST=%s want value", vars["NV_ENV_TEST"])
+	}
 
 	names := Getnames(map[string]string{"A": "1", "": "skip"})
-	require.Contains(t, names, "A")
+	found := false
+	for _, n := range names {
+		if n == "A" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected names to contain A, got %v", names)
+	}
 }
 
 func TestJoinOverrides(t *testing.T) {
@@ -44,16 +55,25 @@ func TestJoinOverrides(t *testing.T) {
 	override := map[string]string{"A": "2", "B": "3"}
 
 	merged := Join(base, override)
-	require.Equal(t, "2", merged["A"])
-	require.Equal(t, "3", merged["B"])
+	if merged["A"] != "2" || merged["B"] != "3" {
+		t.Fatalf("merged=%v want A=2 B=3", merged)
+	}
 }
 
 func TestSetvarsAndClear(t *testing.T) {
-	vars := map[string]string{"NVX_SET_TEST": "1", "NVX_CLEAR_TEST": "2"}
-	require.NoError(t, Setvars(vars))
+	vars := map[string]string{"NV_SET_TEST": "1", "NV_CLEAR_TEST": "2"}
+	if err := Setvars(vars); err != nil {
+		t.Fatalf("Setvars: %v", err)
+	}
 
-	cleared := Clear("NVX_SET_TEST")
-	require.NoError(t, cleared)
-	require.True(t, Exists("NVX_SET_TEST"))
-	require.False(t, Exists("NVX_CLEAR_TEST"))
+	cleared := Clear("NV_SET_TEST")
+	if err := cleared; err != nil {
+		t.Fatalf("Clear: %v", err)
+	}
+	if !Exists("NV_SET_TEST") {
+		t.Fatal("expected NV_SET_TEST to remain")
+	}
+	if Exists("NV_CLEAR_TEST") {
+		t.Fatal("expected NV_CLEAR_TEST to be cleared")
+	}
 }

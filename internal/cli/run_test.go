@@ -30,7 +30,6 @@ import (
 
 	"github.com/adrg/xdg"
 	"github.com/fatih/color"
-	"github.com/stretchr/testify/require"
 )
 
 func TestParseOverride(t *testing.T) {
@@ -54,9 +53,13 @@ func TestConfigPath(t *testing.T) {
 	xdg.Reload()
 
 	configDir := filepath.Join(tmpDir, "xdg", "nv")
-	require.NoError(t, os.MkdirAll(configDir, 0o750))
+	if err := os.MkdirAll(configDir, 0o750); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
 	configPathOnDisk := filepath.Join(configDir, "config.toml")
-	require.NoError(t, os.WriteFile(configPathOnDisk, []byte("[general]\nverbosity=1\n"), 0o600))
+	if err := os.WriteFile(configPathOnDisk, []byte("[general]\nverbosity=1\n"), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	path := configPath()
 	if path != configPathOnDisk {
@@ -129,23 +132,35 @@ func TestRunUsesConfigDefaults(t *testing.T) {
 	xdg.Reload()
 
 	cfgPath := filepath.Join(tmpDir, "xdg", "nv", "config.toml")
-	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o750))
+	if err := os.MkdirAll(filepath.Dir(cfgPath), 0o750); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
 	configData := []byte("[defaults]\nenv_file=\".env.custom\"\ndry_run=true\ncascade=false\n\n[validation]\nenabled=false\nschema_file=\".env.example\"\n\n[general]\nverbosity=1\n")
-	require.NoError(t, os.WriteFile(cfgPath, configData, 0o600))
+	if err := os.WriteFile(cfgPath, configData, 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	workDir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(workDir, ".env.custom"), []byte("FOO=bar\n"), 0o644))
+	if err := os.WriteFile(filepath.Join(workDir, ".env.custom"), []byte("FOO=bar\n"), 0o644); err != nil {
+		t.Fatalf("write env: %v", err)
+	}
 
 	cmdFlags := newRunCmdForTest(t, nil)
 	opts := &runOptions{format: "shell"}
 
 	stdout, _ := captureOutput(t, func() {
 		cwd, err := os.Getwd()
-		require.NoError(t, err)
-		require.NoError(t, os.Chdir(workDir))
+		if err != nil {
+			t.Fatalf("Getwd: %v", err)
+		}
+		if err := os.Chdir(workDir); err != nil {
+			t.Fatalf("Chdir: %v", err)
+		}
 		t.Cleanup(func() { _ = os.Chdir(cwd) })
 
-		require.NoError(t, runRun(cmdFlags, opts, []string{"echo", "ok"}))
+		if err := runRun(cmdFlags, opts, []string{"echo", "ok"}); err != nil {
+			t.Fatalf("runRun: %v", err)
+		}
 	})
 
 	if !strings.Contains(stdout, "export FOO=\"bar\"") {

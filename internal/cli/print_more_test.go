@@ -24,7 +24,7 @@ import "testing"
 
 func TestRunPrintNoMatches(t *testing.T) {
 	opts := &printOptions{}
-	if err := runPrint(opts, []string{"NVX_PRINT_DOES_NOT_EXIST"}); err != nil {
+	if err := runPrint(opts, []string{"NV_PRINT_DOES_NOT_EXIST"}); err != nil {
 		t.Fatalf("runPrint error: %v", err)
 	}
 }

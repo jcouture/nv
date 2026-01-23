@@ -20,30 +20,40 @@
 
 package config
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-)
+import "testing"
 
 func TestDefaultValues(t *testing.T) {
 	cfg := Default()
-	require.Equal(t, 1, cfg.General.Verbosity)
-	require.Equal(t, ".env", cfg.Defaults.EnvFile)
-	require.True(t, cfg.Defaults.Cascade)
-	require.Equal(t, ".env.example", cfg.Validation.SchemaFile)
-	require.Equal(t, GlobalsPriorityFirst, cfg.Globals.Priority)
+	if cfg.General.Verbosity != 1 {
+		t.Fatalf("verbosity=%d want 1", cfg.General.Verbosity)
+	}
+	if cfg.Defaults.EnvFile != ".env" {
+		t.Fatalf("env file=%s want .env", cfg.Defaults.EnvFile)
+	}
+	if !cfg.Defaults.Cascade {
+		t.Fatal("expected cascade to default true")
+	}
+	if cfg.Validation.SchemaFile != ".env.example" {
+		t.Fatalf("schema file=%s want .env.example", cfg.Validation.SchemaFile)
+	}
+	if cfg.Globals.Priority != GlobalsPriorityFirst {
+		t.Fatalf("priority=%s want %s", cfg.Globals.Priority, GlobalsPriorityFirst)
+	}
 }
 
 func TestDefaultConfigIsValid(t *testing.T) {
 	cfg := Default()
 	errs := cfg.Validate()
-	require.Empty(t, errs)
+	if len(errs) != 0 {
+		t.Fatalf("expected no errors, got %v", errs)
+	}
 }
 
 func TestDefaultGlobalsEmpty(t *testing.T) {
 	globals := DefaultGlobals()
-	require.Empty(t, globals.Env)
+	if len(globals.Env) != 0 {
+		t.Fatalf("expected empty globals env, got %v", globals.Env)
+	}
 }
 
 func TestDefaultsImmutable(t *testing.T) {
@@ -52,5 +62,7 @@ func TestDefaultsImmutable(t *testing.T) {
 
 	cfg2 := Default()
 	_, ok := cfg2.Globals.Env["NEW"]
-	require.False(t, ok)
+	if ok {
+		t.Fatal("expected defaults to be immutable")
+	}
 }
