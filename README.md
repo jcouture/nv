@@ -9,92 +9,79 @@
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge)](http://godoc.org/github.com/jcouture/nv)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jcouture/nv?style=for-the-badge)](https://https://goreportcard.com/badge/github.com/jcouture/nv)
 
-`nv` is a tiny tool that loads environment variables from `.env` files and runs your command with them. Use it when you want predictable, explicit env handling for a single command or script. v3 is the next iteration and replaces the old nv/nvx split; if you want to stick to v2, pin an older release via Homebrew.
+`nv` runs any command with predictable environment variables from your `.env` files. Think “one-shot dotenv runner” for scripts, deploys, and local apps.
 
 ## Quick start
 
-### 1) Install
+**Install**
 
-macOS (Homebrew):
-```sh
-brew install jcouture/nv/nv
-```
+- macOS (Homebrew):
+  ```sh
+  brew install jcouture/nv/nv
+  ```
+- Linux/Windows/macOS (binary): download the latest release from https://github.com/jcouture/nv/releases
 
-Linux/Windows/macOS (binary):
-- Download the latest release from https://github.com/jcouture/nv/releases
-
-### 2) Run a command with `.env`
+**Run a command with env vars**
 
 ```sh
 nv run -e .env -- ./myapp
 ```
 
-That is it. `nv` loads variables from `.env` and runs your command with them.
+`nv` loads the file(s) you point at and starts your command with those variables. Nothing is left running after the command exits.
 
-## Common tasks
+## Everyday moves
 
-### Load multiple env files
+- **Cascade the usual dotenv chain**: `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`
+  ```sh
+  nv run --cascade --env=production -- ./deploy.sh
+  ```
+  When you pass `-e/--env-file`, cascading turns off (with a warning) so only the files you listed are used.
 
-```sh
-nv run -e .env -e .env.local -- ./myapp
-```
+- **Point at specific files (multiple allowed)**
+  ```sh
+  nv run -e .env -e .env.local -- ./myapp
+  ```
 
-Note: when you pass one or more `-e/--env-file`, cascading is automatically disabled (with a warning) so only the explicit files are used. Use `--cascade` without `-e` when you want the cascade chain (`.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`).
+- **Override inline for a one-off**
+  ```sh
+  nv run -e .env -o PORT=4200 -- ./myapp
+  ```
 
-### Cascade env files automatically
+- **Preview without running**
+  ```sh
+  nv run -e .env --dry-run -- ./myapp
+  ```
 
-Loads `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`:
+- **Export for another tool**
+  ```sh
+  nv export -e .env --format=json
+  ```
 
-```sh
-nv run --cascade --env=production -- ./deploy.sh
-```
+- **Validate before you run** (defaults to `.env.example` as schema)
+  ```sh
+  nv validate -e .env
+  ```
+  Validation checks that your real `.env` has every required key and that required ones are non-empty. The schema file is just a list of keys with optional example values; it is not loaded at runtime.
+  Schema example:
+  ```
+  DATABASE_URL=postgres://localhost   # example value is ignored
+  OPTIONAL=                           # empty value means "can be blank or missing"
+  # REQUIRED: API_KEY                 # tag required keys with this comment
+  ```
 
-### Override values inline
+- **Use a custom schema file**
+  ```sh
+  nv validate -e .env --schema=.env.staging.example
+  ```
 
-```sh
-nv run -e .env -o PORT=4200 -- ./myapp
-```
+- **See what is currently set**
+  ```sh
+  nv print --sort
+  ```
 
-### Preview what will be set
+## Configuration (optional)
 
-```sh
-nv run -e .env --dry-run -- ./myapp
-```
-
-### Export for another tool
-
-```sh
-nv export -e .env --format=json
-```
-
-### Validate against a schema
-
-Default schema is `.env.example`:
-
-```sh
-nv validate -e .env
-```
-
-Schema example:
-```
-DATABASE_URL=postgres://localhost
-OPTIONAL=
-# REQUIRED: API_KEY
-```
-
-### Print the current environment
-
-```sh
-nv print --sort
-```
-
-## Configuration
-
-Configuration is optional. When you do want it, `nv` stores it in `~/.config/nv/config.toml`.
-
-If you still have a legacy `~/.nv` globals file from v2, `nv config migrate` will import it into the config and back up the original to `~/.config/nv/nv.backup`.
-
-### Quick start
+Config lives at `~/.config/nv/config.toml`. If you still have a legacy `~/.nv` file from v2, `nv config migrate` will import it and back up the original to `~/.config/nv/nv.backup`.
 
 ```sh
 nv config init    # Create config with defaults
@@ -102,9 +89,9 @@ nv config show    # View your current config
 nv config edit    # Edit config in $EDITOR
 ```
 
-### Global variables
+### Globals
 
-Global variables apply to every `nv` command.
+Globals apply to every `nv` command.
 
 ```sh
 nv config globals list
@@ -112,85 +99,61 @@ nv config globals set AWS_REGION us-east-1
 nv config globals unset AWS_REGION
 ```
 
-### Priority rules
+### Priority at a glance
 
-When the same variable is defined multiple times, the default order is:
-
-1. Command-line arguments
-2. CLI flags
+Default order (highest first):
+1. `KEY=value` prefixes on the command you run after `--`
+2. `-o/--override KEY=value`
 3. `.env.local` (when cascading)
 4. `.env`
 5. `[globals.env]`
 
-You can flip the globals priority:
+Flip globals to load last if you prefer:
 
 ```sh
 nv config set globals.priority "last"
 ```
 
-What each layer means:
+## `.env` syntax supported
 
-- Command-line arguments: `KEY=value` prefixes on the command you run after `--`, applied by the launched process (highest priority).
-- CLI flags: `-o/--override KEY=value` passed to `nv`, applied after files and globals.
-- Cascading files: in cascade mode, loaded in order `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local` (missing files are skipped).
-- Standard files: any `--env-file/-e` files are loaded in the order provided; with `--auto-local` defaults, `.env` is followed by optional `.env.local`.
-- Globals: `[globals.env]` from config; merged before files when `globals.priority=first` (default) or after files when set to `last`.
-
-## `.env` format supported
-
-- `KEY=value` assignments with optional `export` prefix
-- Full-line comments with `#` and inline comments outside quotes
-- Single-quoted and double-quoted values (with escapes)
-- Multiline values inside quotes
+- `KEY=value` (with optional `export`)
+- `#` comments on their own line or inline (outside quotes)
+- Single- and double-quoted values with escapes, multiline inside quotes
 - Variable interpolation in unquoted and double-quoted values (`$VAR`, `${VAR}`)
-- `PATH` expansions keep references to incoming `PATH`
+- `PATH` expansions preserve the incoming `PATH`
 
 ## Troubleshooting
 
-### Permission denied accessing config
+- **Permission denied on config**
+  ```sh
+  chmod 644 ~/.config/nv/config.toml
+  ```
+- **Config seems corrupted**
+  ```sh
+  nv config validate
+  nv config reset
+  ```
+- **Restore backup**
+  ```sh
+  cp ~/.config/nv/nv.backup ~/.config/nv/config.toml
+  ```
 
-```sh
-chmod 644 ~/.config/nv/config.toml
-```
+## Build from source (latest dev)
 
-### Config file corrupted
-
-```sh
-nv config validate
-nv config reset
-```
-
-### Restore from backup
-
-```sh
-cp ~/.config/nv/nv.backup ~/.config/nv/config.toml
-```
-
-## Build from source
-
-If you want to build the latest development version:
-
-1. Verify you have Go 1.25+ installed
-
+1) Verify Go 1.25+
 ```sh
 go version
 ```
-
-2. Clone this repository
-
+2) Clone
 ```sh
 git clone https://github.com/jcouture/nv.git
 cd nv
 ```
-
-3. Install build dependencies (using [mise-en-place](https://mise.jdx.dev/))
-
+3) Install build deps (via [mise-en-place](https://mise.jdx.dev/))
 ```sh
 mise install
 ```
-
-4. Build
-
+4) Build
 ```sh
 make build
 ```
