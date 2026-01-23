@@ -25,7 +25,6 @@ func Default() *Config {
 		General:    DefaultGeneral(),
 		Defaults:   DefaultDefaults(),
 		Validation: DefaultValidation(),
-		Paths:      DefaultPaths(),
 		Globals:    DefaultGlobals(),
 	}
 }
@@ -53,13 +52,6 @@ func DefaultValidation() ValidationConfig {
 		SchemaFile: ".env.example",
 		Strict:     true,
 		AllowExtra: true,
-	}
-}
-
-func DefaultPaths() PathsConfig {
-	return PathsConfig{
-		DetectPathModifications: true,
-		PathStrategy:            PathStrategyPrepend,
 	}
 }
 

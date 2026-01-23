@@ -48,16 +48,6 @@ func TestConfigValidation(t *testing.T) {
 			errCount: 1,
 		},
 		{
-			name: "invalid path strategy",
-			config: func() Config {
-				cfg := *Default()
-				cfg.Paths.PathStrategy = "sideways"
-				return cfg
-			}(),
-			wantErr:  true,
-			errCount: 1,
-		},
-		{
 			name: "invalid verbosity",
 			config: func() Config {
 				cfg := *Default()
@@ -71,11 +61,10 @@ func TestConfigValidation(t *testing.T) {
 			name: "multiple validation errors",
 			config: Config{
 				General: GeneralConfig{Verbosity: -1},
-				Paths:   PathsConfig{PathStrategy: "bad"},
 				Globals: GlobalsConfig{Priority: "nope"},
 			},
 			wantErr:  true,
-			errCount: 3,
+			errCount: 2,
 		},
 		{
 			name: "invalid global env keys",
@@ -143,7 +132,6 @@ func TestValidateGlobalEnvKeys(t *testing.T) {
 func TestConfigFix(t *testing.T) {
 	cfg := &Config{
 		General: GeneralConfig{Verbosity: 9},
-		Paths:   PathsConfig{PathStrategy: "bad"},
 		Globals: GlobalsConfig{
 			Priority: "nope",
 			Env:      map[string]string{"BAD=KEY": "value"},
@@ -154,7 +142,6 @@ func TestConfigFix(t *testing.T) {
 	defaults := Default()
 
 	require.Equal(t, defaults.General.Verbosity, fixed.General.Verbosity)
-	require.Equal(t, defaults.Paths.PathStrategy, fixed.Paths.PathStrategy)
 	require.Equal(t, defaults.Globals.Priority, fixed.Globals.Priority)
 	require.Empty(t, fixed.Globals.Env)
 	require.NotEmpty(t, fields)

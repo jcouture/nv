@@ -58,7 +58,6 @@ func TestLoadFromPathValid(t *testing.T) {
 	cfg, err := LoadFromPath(path)
 	require.NoError(t, err)
 	require.Equal(t, 2, cfg.General.Verbosity)
-	require.Equal(t, PathStrategyAppend, cfg.Paths.PathStrategy)
 	require.Equal(t, GlobalsPriorityLast, cfg.Globals.Priority)
 	require.Equal(t, "us-east-1", cfg.Globals.Env["AWS_REGION"])
 }
@@ -75,7 +74,6 @@ func TestLoadFromPathInvalidValuesFixes(t *testing.T) {
 	require.NoError(t, err)
 
 	defaults := Default()
-	require.Equal(t, defaults.Paths.PathStrategy, cfg.Paths.PathStrategy)
 	require.Equal(t, defaults.Globals.Priority, cfg.Globals.Priority)
 	require.Equal(t, defaults.General.Verbosity, cfg.General.Verbosity)
 	require.Empty(t, cfg.Globals.Env)

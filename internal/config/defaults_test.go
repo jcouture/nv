@@ -33,7 +33,6 @@ func TestDefaultValues(t *testing.T) {
 	require.Equal(t, ".env", cfg.Defaults.EnvFile)
 	require.True(t, cfg.Defaults.Cascade)
 	require.Equal(t, ".env.example", cfg.Validation.SchemaFile)
-	require.Equal(t, PathStrategyPrepend, cfg.Paths.PathStrategy)
 	require.Equal(t, GlobalsPriorityFirst, cfg.Globals.Priority)
 }
 

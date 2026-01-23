@@ -277,13 +277,6 @@ func (c *Config) MergeWithDefaults() {
 		c.Validation.AllowExtra = defaults.Validation.AllowExtra
 	}
 
-	if !c.defined["paths.detect_path_modifications"] {
-		c.Paths.DetectPathModifications = defaults.Paths.DetectPathModifications
-	}
-	if !c.defined["paths.path_strategy"] {
-		c.Paths.PathStrategy = defaults.Paths.PathStrategy
-	}
-
 	if !c.defined["globals.priority"] {
 		c.Globals.Priority = defaults.Globals.Priority
 	}
@@ -309,8 +302,6 @@ func definedFromMeta(meta toml.MetaData) map[string]bool {
 		{[]string{"validation", "schema_file"}, "validation.schema_file"},
 		{[]string{"validation", "strict"}, "validation.strict"},
 		{[]string{"validation", "allow_extra"}, "validation.allow_extra"},
-		{[]string{"paths", "detect_path_modifications"}, "paths.detect_path_modifications"},
-		{[]string{"paths", "path_strategy"}, "paths.path_strategy"},
 		{[]string{"globals", "priority"}, "globals.priority"},
 		{[]string{"globals", "env"}, "globals.env"},
 	}

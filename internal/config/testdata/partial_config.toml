@@ -1,5 +1,2 @@
 [defaults]
 env_file = ".env.custom"
-
-[paths]
-detect_path_modifications = false

@@ -32,7 +32,6 @@ import (
 func TestConfigTOMLSerialization(t *testing.T) {
 	cfg := Default()
 	cfg.General.AutoValidate = true
-	cfg.Paths.PathStrategy = PathStrategyAppend
 	cfg.Globals.Env = map[string]string{
 		"AWS_REGION": "us-east-1",
 	}
@@ -44,7 +43,6 @@ func TestConfigTOMLSerialization(t *testing.T) {
 	_, err := toml.Decode(buf.String(), &decoded)
 	require.NoError(t, err)
 	require.Equal(t, cfg.General.AutoValidate, decoded.General.AutoValidate)
-	require.Equal(t, cfg.Paths.PathStrategy, decoded.Paths.PathStrategy)
 	require.Equal(t, cfg.Globals.Env["AWS_REGION"], decoded.Globals.Env["AWS_REGION"])
 }
 
@@ -57,7 +55,6 @@ func TestConfigPartialMergeWithDefaults(t *testing.T) {
 	require.Equal(t, ".env.custom", cfg.Defaults.EnvFile)
 	require.Equal(t, defaults.General.WarnOnMissing, cfg.General.WarnOnMissing)
 	require.Equal(t, defaults.Validation.SchemaFile, cfg.Validation.SchemaFile)
-	require.Equal(t, defaults.Paths.PathStrategy, cfg.Paths.PathStrategy)
 }
 
 func TestConfigGlobalsEnvAccess(t *testing.T) {
