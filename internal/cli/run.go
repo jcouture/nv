@@ -52,10 +52,10 @@ func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [flags] -- <command> [args...]",
 		Short: "Execute a command with loaded environment",
-		Long:  "Load environment variables from .env files and execute the specified command. When --env-file is provided, cascading is automatically disabled (with a warning) so explicit files take precedence.",
+		Long:  "Load env vars from .env-ish files, then run your cmd. If you pass --env-file we kill cascade on purpose (saves folks from surprises).",
 		Example: `  nv run -e .env -- ./myapp
 	  nv run -e .env -e .env.local -- npm start
-	  nv run --cascade --env=production -- ./deploy.sh`,
+	  nv run --cascade --env=production -- ./deploy.sh  # careful: this grabs .env.production*`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runRun(cmd, opts, args)
@@ -71,8 +71,8 @@ func newRunCmd() *cobra.Command {
 	flags.StringSliceVarP(&opts.preserve, "preserve", "p", []string{"PATH", "HOME", "USER"}, "System variables to preserve")
 	flags.BoolVar(&opts.dryRun, "dry-run", false, "Print environment without executing")
 	flags.BoolVar(&opts.validate, "validate", false, "Validate environment variables before execution")
-	flags.StringVar(&opts.schemaFile, "schema", defaultSchemaFile, "Schema file to validate against")
-	flags.StringVar(&opts.schemaFile, "schema-file", defaultSchemaFile, "Schema file to validate against")
+	flags.StringVar(&opts.schemaFile, "schema", defaultSchemaFile, "Schema file for validation (old flag)")
+	flags.StringVar(&opts.schemaFile, "schema-file", defaultSchemaFile, "Schema file for validation (preferred)")
 	flags.BoolVar(&opts.schemaStrict, "schema-strict", false, "Warn on environment variables not present in schema")
 	flags.StringVar(&opts.format, "format", exporter.FormatShell, "Export format for dry run (shell or json)")
 	flags.BoolVar(&opts.unredacted, "unredacted", false, "Show unredacted values in dry run output")
@@ -139,7 +139,7 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 			fmt.Fprintln(os.Stderr)
 		}
 		fmt.Fprintf(os.Stderr, "warning: --env-file provided; disabling --cascade and using only explicit env files\n")
-		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr) // yes, the blank line is intentional; keeps CI logs readable
 	}
 	if err != nil {
 		return err

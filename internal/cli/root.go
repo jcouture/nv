@@ -50,15 +50,15 @@ func NewRootCmd(name string) *cobra.Command {
 	var verbose bool
 	rootCmd := &cobra.Command{
 		Use:           name,
-		Short:         "Env loader + runner",
-		Long:          "Loads .env files (project/local/cascade) then runs a command.",
+		Short:         "env loader + runner",
+		Long:          "reads .env, squashes overrides, then runs whatever you pass in",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable colored output")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output for env loading")
+	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "no ansi paint (helps CI)")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "chatty loading (see which files we touched)")
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureColors(noColor)
 		setVerbosityOverride(verbose)
@@ -88,7 +88,7 @@ func executeCommand(name string) int {
 		if exitErr, ok := err.(exitError); ok {
 			return exitErr.code
 		}
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, err) // if this is too chatty, tweak verbosity plumbing first
 		return 1
 	}
 	return 0
