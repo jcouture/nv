@@ -28,10 +28,9 @@ import (
 )
 
 var (
-	Version   = "dev"
-	Commit    = "none"
-	BuildDate = "unknown"
-	exitFunc  = os.Exit
+	Version  = "dev"
+	Commit   = "none"
+	exitFunc = os.Exit
 )
 
 type exitError struct {
@@ -50,8 +49,8 @@ func NewRootCmd(name string) *cobra.Command {
 	var verbose bool
 	rootCmd := &cobra.Command{
 		Use:           name,
-		Short:         "env loader + runner",
-		Long:          "reads .env, squashes overrides, then runs whatever you pass in",
+		Short:         "Purpose-built env loader for your current task",
+		Long:          "Reads layered .env sources for the current context, merges overrides predictably, and launches your command with the right environment every time",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

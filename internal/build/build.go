@@ -23,5 +23,4 @@ package build
 var (
 	Version   = "DEV"
 	GitCommit = ""
-	BuildDate = ""
 )

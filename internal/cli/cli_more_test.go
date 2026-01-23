@@ -138,13 +138,13 @@ func TestRunVersion(t *testing.T) {
 			name:       "short",
 			opts:       versionOptions{short: true},
 			wantErr:    false,
-			wantString: Version,
+			wantString: getVersionInfo().GitVersion,
 		},
 		{
 			name:       "text",
 			opts:       versionOptions{format: "text"},
 			wantErr:    false,
-			wantString: "nv version",
+			wantString: "GitVersion",
 		},
 		{
 			name:      "json",
@@ -176,8 +176,8 @@ func TestRunVersion(t *testing.T) {
 				if err := json.Unmarshal([]byte(stdout), &payload); err != nil {
 					t.Fatalf("expected json output: %v", err)
 				}
-				if payload["version"] == "" {
-					t.Fatalf("expected version in json output")
+				if payload["gitVersion"] == "" {
+					t.Fatalf("expected gitVersion in json output")
 				}
 				return
 			}
