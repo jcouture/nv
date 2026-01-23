@@ -105,7 +105,7 @@ func runRun(cmd *cobra.Command, opts *runOptions, args []string) error {
 		opts.schemaFile = cfg.Validation.SchemaFile
 	}
 	if !flags.Changed("schema-strict") {
-		opts.schemaStrict = !cfg.Validation.AllowExtra
+		opts.schemaStrict = cfg.Validation.Strict
 	}
 
 	if level := verbosityLevel(); level > 0 {

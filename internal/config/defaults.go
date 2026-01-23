@@ -48,8 +48,7 @@ func DefaultValidation() ValidationConfig {
 	return ValidationConfig{
 		Enabled:    false,
 		SchemaFile: ".env.example",
-		Strict:     true,
-		AllowExtra: true,
+		Strict:     false,
 	}
 }
 

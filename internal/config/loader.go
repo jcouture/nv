@@ -267,9 +267,6 @@ func (c *Config) MergeWithDefaults() {
 	if !c.defined["validation.strict"] {
 		c.Validation.Strict = defaults.Validation.Strict
 	}
-	if !c.defined["validation.allow_extra"] {
-		c.Validation.AllowExtra = defaults.Validation.AllowExtra
-	}
 
 	if !c.defined["globals.priority"] {
 		c.Globals.Priority = defaults.Globals.Priority
@@ -293,7 +290,6 @@ func definedFromMeta(meta toml.MetaData) map[string]bool {
 		{[]string{"validation", "enabled"}, "validation.enabled"},
 		{[]string{"validation", "schema_file"}, "validation.schema_file"},
 		{[]string{"validation", "strict"}, "validation.strict"},
-		{[]string{"validation", "allow_extra"}, "validation.allow_extra"},
 		{[]string{"globals", "priority"}, "globals.priority"},
 		{[]string{"globals", "env"}, "globals.env"},
 	}

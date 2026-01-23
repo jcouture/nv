@@ -46,7 +46,6 @@ type ValidationConfig struct {
 	Enabled    bool   `toml:"enabled"`
 	SchemaFile string `toml:"schema_file"`
 	Strict     bool   `toml:"strict"`
-	AllowExtra bool   `toml:"allow_extra"`
 }
 
 type GlobalsConfig struct {
