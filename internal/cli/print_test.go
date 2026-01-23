@@ -59,7 +59,7 @@ func TestRunPrintIgnoreCase(t *testing.T) {
 	opts := &printOptions{ignoreCase: true}
 
 	stdout, _ := captureOutput(t, func() {
-		if err := runPrint(opts, []string{"nvx_print_test_bar"}); err != nil {
+		if err := runPrint(opts, []string{"nv_print_test_bar"}); err != nil {
 			t.Fatalf("runPrint error: %v", err)
 		}
 	})

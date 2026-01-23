@@ -1,4 +1,4 @@
-// Copyright 2015-2025 Jean-Philippe Couture
+// Copyright (c) 2020-2025 Jonathan Couture
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -89,8 +89,8 @@ func MigrateLegacyEnv() (bool, error) {
 	fmt.Fprintln(os.Stdout, "Migration successful!")
 	fmt.Fprintf(os.Stdout, "Global variables moved to: %s\n", configPath)
 	fmt.Fprintf(os.Stdout, "Backup saved to: %s\n\n", filepath.Join(filepath.Dir(configPath), "nv.backup"))
-	fmt.Fprintln(os.Stdout, "View your globals: nvx config show")
-	fmt.Fprintln(os.Stdout, "Edit your config: nvx config edit")
+	fmt.Fprintln(os.Stdout, "View your globals: nv config show")
+	fmt.Fprintln(os.Stdout, "Edit your config: nv config edit")
 
 	return true, nil
 }
@@ -122,7 +122,7 @@ func PromptMigration() (bool, error) {
 	}
 
 	fmt.Fprintf(os.Stdout, "Warning: legacy global env file detected: %s\n\n", legacyPath)
-	fmt.Fprintln(os.Stdout, "nvx now uses XDG-compliant configuration.")
+	fmt.Fprintln(os.Stdout, "nv now uses XDG-compliant configuration.")
 	fmt.Fprintln(os.Stdout, "Your global environment variables will be migrated to:")
 	fmt.Fprintf(os.Stdout, "%s\n\n", configPath)
 	fmt.Fprintln(os.Stdout, "Your ~/.nv file will be:")

@@ -37,7 +37,7 @@ import (
 func newConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Manage nvx configuration",
+		Short: "Manage nv configuration",
 	}
 
 	cmd.AddCommand(

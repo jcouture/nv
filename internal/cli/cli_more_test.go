@@ -48,7 +48,7 @@ func TestConfigureColors(t *testing.T) {
 }
 
 func TestNewRootCmdCommands(t *testing.T) {
-	cmd := NewRootCmd("nvx")
+	cmd := NewRootCmd("nv")
 	names := map[string]bool{}
 	for _, sub := range cmd.Commands() {
 		names[sub.Name()] = true
@@ -62,8 +62,8 @@ func TestNewRootCmdCommands(t *testing.T) {
 
 func TestNewRootCmdDefaultName(t *testing.T) {
 	cmd := NewRootCmd("")
-	if cmd.Use != "nvx" {
-		t.Fatalf("expected default name nvx, got %q", cmd.Use)
+	if cmd.Use != "nv" {
+		t.Fatalf("expected default name nv, got %q", cmd.Use)
 	}
 }
 
@@ -80,8 +80,8 @@ func TestExecuteInvalidCommand(t *testing.T) {
 		os.Args = origArgs
 	})
 
-	os.Args = []string{"nvx", "does-not-exist"}
-	exitCode := executeCommand("nvx")
+	os.Args = []string{"nv", "does-not-exist"}
+	exitCode := executeCommand("nv")
 
 	if exitCode == 0 {
 		t.Fatal("expected non-zero exit code for invalid command")
@@ -101,9 +101,9 @@ func TestExecuteExitError(t *testing.T) {
 	}
 
 	cmd, args := exitCommand(7)
-	os.Args = append([]string{"nvx", "run", "--env-file", envFile, "--"}, append([]string{cmd}, args...)...)
+	os.Args = append([]string{"nv", "run", "--env-file", envFile, "--"}, append([]string{cmd}, args...)...)
 
-	exitCode := executeCommand("nvx")
+	exitCode := executeCommand("nv")
 
 	if exitCode != 7 {
 		t.Fatalf("expected exit code 7, got %d", exitCode)
@@ -118,7 +118,7 @@ func TestExecuteSuccess(t *testing.T) {
 		exitFunc = origExit
 	})
 
-	os.Args = []string{"nvx", "version", "--format", "text"}
+	os.Args = []string{"nv", "version", "--format", "text"}
 	exitFunc = func(code int) {
 		t.Fatalf("unexpected exit code %d", code)
 	}
@@ -144,7 +144,7 @@ func TestRunVersion(t *testing.T) {
 			name:       "text",
 			opts:       versionOptions{format: "text"},
 			wantErr:    false,
-			wantString: "nvx version",
+			wantString: "nv version",
 		},
 		{
 			name:      "json",
