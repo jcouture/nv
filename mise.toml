@@ -1,5 +1,5 @@
 [tools]
-go = "1.25.7"
+go = "1.26.1"
 goreleaser = "2.13.0"
 gotestsum = "1.13.0"
 "ubi:securego/gosec" = "latest"
