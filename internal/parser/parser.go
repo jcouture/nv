@@ -23,6 +23,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"strings"
 )
@@ -33,9 +34,7 @@ type Option func(*Parser)
 // WithExistingEnv feeds vars into interpolation.
 func WithExistingEnv(env map[string]string) Option {
 	copied := make(map[string]string, len(env))
-	for k, v := range env {
-		copied[k] = v
-	}
+	maps.Copy(copied, env)
 	return func(p *Parser) {
 		p.env = copied
 	}

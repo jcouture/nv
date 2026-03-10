@@ -20,6 +20,8 @@
 
 package env
 
+import "slices"
+
 import "testing"
 
 func TestExistsGetvarsGetnames(t *testing.T) {
@@ -38,13 +40,7 @@ func TestExistsGetvarsGetnames(t *testing.T) {
 	}
 
 	names := Getnames(map[string]string{"A": "1", "": "skip"})
-	found := false
-	for _, n := range names {
-		if n == "A" {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(names, "A")
 	if !found {
 		t.Fatalf("expected names to contain A, got %v", names)
 	}

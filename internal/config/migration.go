@@ -24,6 +24,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -154,9 +155,7 @@ func ParseLegacyEnvFile(path string) (map[string]string, error) {
 func CreateConfigWithGlobals(globals map[string]string) *Config {
 	cfg := Default()
 	cfg.Globals.Env = make(map[string]string, len(globals))
-	for k, v := range globals {
-		cfg.Globals.Env[k] = v
-	}
+	maps.Copy(cfg.Globals.Env, globals)
 	return cfg
 }
 

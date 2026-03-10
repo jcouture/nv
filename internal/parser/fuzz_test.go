@@ -39,11 +39,8 @@ func FuzzLexerTokens(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, input string) {
 		lexer := NewLexer(input)
-		maxTokens := len(input)*2 + 100
-		if maxTokens < 200 {
-			maxTokens = 200
-		}
-		for i := 0; i < maxTokens; i++ {
+		maxTokens := max(len(input)*2+100, 200)
+		for range maxTokens {
 			tok := lexer.NextToken()
 			if tok.Type == TokenEOF {
 				return
