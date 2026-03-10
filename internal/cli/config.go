@@ -409,8 +409,8 @@ func getConfigValue(cfg *config.Config, key string) (string, error) {
 	case "globals.priority":
 		return cfg.Globals.Priority, nil
 	default:
-		if strings.HasPrefix(key, "globals.env.") {
-			name := strings.TrimPrefix(key, "globals.env.")
+		if after, ok := strings.CutPrefix(key, "globals.env."); ok {
+			name := after
 			return cfg.Globals.Env[name], nil
 		}
 		return "", fmt.Errorf("unknown config key: %s", key)
@@ -462,8 +462,8 @@ func setConfigValue(cfg *config.Config, key string, value string) error {
 	case "globals.priority":
 		cfg.Globals.Priority = value
 	default:
-		if strings.HasPrefix(key, "globals.env.") {
-			name := strings.TrimPrefix(key, "globals.env.")
+		if after, ok := strings.CutPrefix(key, "globals.env."); ok {
+			name := after
 			if cfg.Globals.Env == nil {
 				cfg.Globals.Env = map[string]string{}
 			}

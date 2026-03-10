@@ -166,10 +166,8 @@ func TestConcurrentConfigReads(t *testing.T) {
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, 5)
-	for i := 0; i < 5; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 5 {
+		wg.Go(func() {
 			loaded, err := LoadFromPath(path)
 			if err != nil {
 				errCh <- err
@@ -178,7 +176,7 @@ func TestConcurrentConfigReads(t *testing.T) {
 			if loaded.General.Verbosity != cfg.General.Verbosity {
 				errCh <- fmt.Errorf("verbosity=%d, want %d", loaded.General.Verbosity, cfg.General.Verbosity)
 			}
-		}()
+		})
 	}
 	wg.Wait()
 	close(errCh)

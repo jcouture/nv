@@ -20,6 +20,8 @@
 
 package config
 
+import "maps"
+
 type Config struct {
 	General    GeneralConfig    `toml:"general"`
 	Defaults   DefaultsConfig   `toml:"defaults"`
@@ -63,9 +65,7 @@ func (c *Config) GetGlobalEnv() map[string]string {
 		return map[string]string{}
 	}
 	out := make(map[string]string, len(c.Globals.Env))
-	for k, v := range c.Globals.Env {
-		out[k] = v
-	}
+	maps.Copy(out, c.Globals.Env)
 	return out
 }
 

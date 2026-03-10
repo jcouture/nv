@@ -23,7 +23,9 @@ package env
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -84,9 +86,7 @@ func Join(base map[string]string, override map[string]string) map[string]string 
 	if len(base) == 0 {
 		return override
 	}
-	for k, v := range override {
-		base[k] = v
-	}
+	maps.Copy(base, override)
 
 	return base
 }
@@ -103,10 +103,5 @@ func Setvars(vars map[string]string) error {
 }
 
 func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, e)
 }

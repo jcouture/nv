@@ -22,6 +22,7 @@ package cli
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"sort"
@@ -162,9 +163,7 @@ func traceGlobals(env map[string]string, globals map[string]string) {
 }
 
 func mergeEnv(dst map[string]string, src map[string]string) {
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 }
 
 func autoLocalForFiles(files []string) string {
