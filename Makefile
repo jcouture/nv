@@ -17,7 +17,7 @@ TEST_PKGS ?= ./...
 FUZZ_PKGS ?= ./...
 FUZZTIME ?= 30s
 
-.PHONY: build clean help fmt vet gosec tidy precommit test install fuzz coverage
+.PHONY: build clean help fmt fix vet gosec vulncheck tidy precommit test install fuzz coverage
 
 .DEFAULT_GOAL := help
 
@@ -62,6 +62,11 @@ fmt:
 	@find . -name '*.go' -not -path './.*' | xargs -r gofmt -s -w
 	@echo "Code formatted"
 
+## Apply automated Go fixes
+fix:
+	@go fix ./...
+	@echo "Go fix applied"
+
 ## Static analysis (vet)
 vet:
 	@go vet ./...
@@ -69,15 +74,20 @@ vet:
 
 ## Security analysis (gosec)
 gosec:
-	@gosec ./...
+	@go run github.com/securego/gosec/v2/cmd/gosec@v2.22.1 ./...
 	@echo "Gosec passed"
+
+## Vulnerability scanning
+vulncheck:
+	@go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+	@echo "Vulnerability scan passed"
 
 ## Tidy modules (writes go.mod/go.sum if needed)
 tidy:
 	@go mod tidy -v
 
 ## Local pre-commit convenience (writes fmt/tidy)
-precommit: fmt tidy vet gosec test
+precommit: fmt fix tidy vet gosec vulncheck test
 	@echo "Pre-commit checks passed"
 
 ## Clean build artifacts
