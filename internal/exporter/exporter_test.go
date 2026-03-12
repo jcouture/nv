@@ -212,6 +212,14 @@ func TestEscapeShellValue(t *testing.T) {
 	}
 }
 
+func TestWriteJSONReturnsWriteError(t *testing.T) {
+	writerErr := errWriter{err: errWriterSentinel}
+	err := Write(&writerErr, map[string]string{"FOO": "bar"}, Options{Format: FormatJSON, Unredacted: true})
+	if err == nil {
+		t.Fatal("expected write error for JSON format")
+	}
+}
+
 var errWriterSentinel = errors.New("write failed")
 
 type errWriter struct {
