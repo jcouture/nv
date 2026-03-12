@@ -23,29 +23,45 @@ package exporter
 import "testing"
 
 func TestIsSecretKey(t *testing.T) {
-	cases := map[string]bool{
-		"DATABASE_PASSWORD": true,
-		"STRIPE_SECRET_KEY": true,
-		"JWT_TOKEN":         true,
-		"AWS_ACCESS_KEY_ID": true,
-		"GITHUB_API_TOKEN":  true,
-		"AUTH_TOKEN":        true,
-		"PRIVATE_KEY":       true,
-		"DB_CREDENTIALS":    true,
-		"PUBLIC_KEY":        false,
-		"SSH_PUBLIC_KEY":    false,
-		"PUBLIC_KEY_SECRET": true,
-		"KEY_PREFIX":        false,
-		"AUTHOR_NAME":       false,
-		"DATABASE_URL":      false,
-		"KEY":               true,
-		"APP_KEY":           true,
+	cases := []struct {
+		key    string
+		secret bool
+	}{
+		{"DATABASE_PASSWORD", true},
+		{"STRIPE_SECRET_KEY", true},
+		{"JWT_TOKEN", true},
+		{"AWS_ACCESS_KEY_ID", true},
+		{"GITHUB_API_TOKEN", true},
+		{"AUTH_TOKEN", true},
+		{"PRIVATE_KEY", true},
+		{"DB_CREDENTIALS", true},
+		{"PUBLIC_KEY", false},
+		{"SSH_PUBLIC_KEY", false},
+		{"PUBLIC_KEY_SECRET", true},
+		{"KEY_PREFIX", false},
+		{"AUTHOR_NAME", false},
+		{"DATABASE_URL", false},
+		{"KEY", true},
+		{"APP_KEY", true},
+		// no-underscore variants
+		{"APIKEY", true},
+		{"PRIVATEKEY", true},
+		// lowercase input (isSecretKey is case-insensitive)
+		{"database_password", true},
+		{"app_key", true},
+		{"author_name", false},
+		// AUTH present but AUTHOR as well — should not be secret
+		{"MY_AUTHOR", false},
+		// bare AUTH without AUTHOR — should be secret
+		{"MY_AUTH", true},
 	}
 
-	for key, expected := range cases {
-		if got := isSecretKey(key); got != expected {
-			t.Fatalf("isSecretKey(%q) = %v, want %v", key, got, expected)
-		}
+	for _, tc := range cases {
+		t.Run(tc.key, func(t *testing.T) {
+			if got := isSecretKey(tc.key); got != tc.secret {
+				t.Fatalf("isSecretKey(%q) = %v, want %v", tc.key, got, tc.secret)
+			}
+		})
 	}
 }
 

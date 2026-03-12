@@ -2,7 +2,6 @@ BIN_DIR ?= bin
 BIN_NV ?= $(BIN_DIR)/nv
 
 GOFLAGS ?= -trimpath -buildvcs=false
-GOEXPERIMENT ?= greenteagc
 
 GOCACHE_DIR ?= $(CURDIR)/.gocache
 export GOCACHE := $(GOCACHE_DIR)
@@ -23,8 +22,7 @@ FUZZTIME ?= 30s
 
 ## Run unit tests
 test:
-	@echo "Running tests with coverage..."
-	@go test -coverprofile=coverage.out -covermode=atomic ./...
+	@go run gotest.tools/gotestsum@v1.13.0 --format=testdox -- -coverprofile=coverage.out -covermode=atomic ./...
 	@go tool cover -func=coverage.out | grep total | awk '{print "Total coverage: " $$3}'
 
 .PHONY: coverage
@@ -48,12 +46,12 @@ fuzz:
 ## Build nv binary
 build:
 	@mkdir -p $(BIN_DIR) $(GOCACHE_DIR)
-	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN_NV) ./cmd/nv
+	CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN_NV) ./cmd/nv
 	@echo "Built $(BIN_NV)"
 
 ## Install nv to GOPATH/bin
 install:
-	@GOEXPERIMENT=$(GOEXPERIMENT) CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) ./cmd/nv
+	CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) ./cmd/nv
 	@echo "Installed nv to $$(go env GOPATH)/bin"
 
 ## Format code (writes changes)
