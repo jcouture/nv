@@ -68,10 +68,14 @@ func TestConfigPath(t *testing.T) {
 }
 
 func TestRunConfigPathError(t *testing.T) {
-	orig := xdg.ConfigHome
-	t.Cleanup(func() { xdg.ConfigHome = orig })
+	tmpDir := t.TempDir()
+	badHome := filepath.Join(tmpDir, "bad")
+	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
+		t.Fatalf("write bad home: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", badHome)
+	xdg.Reload()
 
-	xdg.ConfigHome = ""
 	path := configPath()
 	if path != "unknown" {
 		t.Fatalf("expected unknown config path")

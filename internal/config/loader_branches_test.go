@@ -156,10 +156,13 @@ func TestLoadReturnsDefaultOnError(t *testing.T) {
 }
 
 func TestLoadConfigHomeError(t *testing.T) {
-	orig := xdg.ConfigHome
-	t.Cleanup(func() { xdg.ConfigHome = orig })
+	tmpDir := t.TempDir()
+	badHome := filepath.Join(tmpDir, "bad")
+	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
+		t.Fatalf("write bad home: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", badHome)
 
-	xdg.ConfigHome = ""
 	cfg := Load()
 	if cfg.General.Verbosity != Default().General.Verbosity {
 		t.Fatalf("verbosity=%d want %d", cfg.General.Verbosity, Default().General.Verbosity)

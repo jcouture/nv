@@ -81,7 +81,7 @@ nv run -e .env -- ./myapp
 
 ## Configuration (optional)
 
-Config lives at `~/.config/nv/config.toml`. If you still have a legacy `~/.nv` file from v2, `nv config migrate` will import it and back up the original to `~/.config/nv/nv.backup`.
+Config lives at `$XDG_CONFIG_HOME/nv/config.toml` (defaults to `~/.config/nv` on Linux, `~/Library/Application Support/nv` on macOS). Run `nv config path` to see the exact location. If you still have a legacy `~/.nv` file from v2, `nv config migrate` will import it and back up the original alongside the config file.
 
 ```sh
 nv config init    # Create config with defaults
@@ -126,7 +126,7 @@ nv config set globals.priority "last"
 
 - **Permission denied on config**
   ```sh
-  chmod 644 ~/.config/nv/config.toml
+  chmod 644 "$(nv config path)"
   ```
 - **Config seems corrupted**
   ```sh
@@ -135,7 +135,7 @@ nv config set globals.priority "last"
   ```
 - **Restore backup**
   ```sh
-  cp ~/.config/nv/nv.backup ~/.config/nv/config.toml
+  cp "$(dirname "$(nv config path)")/nv.backup" "$(nv config path)"
   ```
 
 ## Build from source (latest dev)
