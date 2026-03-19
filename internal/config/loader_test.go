@@ -55,7 +55,7 @@ func TestGetConfigDirWithoutXDG(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetConfigDir: %v", err)
 	}
-	want := filepath.Join(temp, ".config", "nv")
+	want := filepath.Join(xdg.ConfigHome, "nv")
 	if dir != want {
 		t.Fatalf("dir=%s want %s", dir, want)
 	}

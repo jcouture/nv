@@ -31,9 +31,6 @@ import (
 )
 
 func GetConfigDir() (string, error) {
-	if xdg.ConfigHome == "" {
-		return "", fmt.Errorf("XDG config home is empty")
-	}
 	return filepath.Join(xdg.ConfigHome, "nv"), nil
 }
 
