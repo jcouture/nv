@@ -21,17 +21,13 @@
 package cli
 
 import (
+	"github.com/jcouture/nv/internal/config"
 	"path/filepath"
 	"testing"
-
-	"github.com/adrg/xdg"
-	"github.com/jcouture/nv/internal/config"
 )
 
 func TestLoadConfigForWriteCreatesDefaultWhenMissing(t *testing.T) {
-	temp := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", temp)
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 
 	cfg, err := loadConfigForWrite()
 	if err != nil {
@@ -43,11 +39,9 @@ func TestLoadConfigForWriteCreatesDefaultWhenMissing(t *testing.T) {
 }
 
 func TestLoadConfigForWriteLoadsExisting(t *testing.T) {
-	temp := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", temp)
-	xdg.Reload()
+	configDir := setTestConfigHome(t)
 
-	configPath := filepath.Join(temp, "nv", "config.toml")
+	configPath := filepath.Join(configDir, "config.toml")
 	cfg := config.Default()
 	cfg.Defaults.EnvFile = ".env.custom"
 	if err := cfg.SaveToPath(configPath); err != nil {

@@ -22,14 +22,12 @@ package cli
 
 import (
 	"bytes"
+	"github.com/fatih/color"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
-
-	"github.com/adrg/xdg"
-	"github.com/fatih/color"
 )
 
 func TestParseOverride(t *testing.T) {
@@ -47,12 +45,8 @@ func TestParseOverride(t *testing.T) {
 }
 
 func TestConfigPath(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	configDir := setTestConfigHome(t)
 
-	configDir := filepath.Join(tmpDir, "xdg", "nv")
 	if err := os.MkdirAll(configDir, 0o750); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
@@ -73,8 +67,7 @@ func TestRunConfigPathError(t *testing.T) {
 	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
 		t.Fatalf("write bad home: %v", err)
 	}
-	t.Setenv("XDG_CONFIG_HOME", badHome)
-	xdg.Reload()
+	t.Setenv("HOME", badHome)
 
 	path := configPath()
 	if path != "unknown" {
@@ -83,10 +76,7 @@ func TestRunConfigPathError(t *testing.T) {
 }
 
 func TestConfigPathMissing(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 
 	path := configPath()
 	if path != "-" {
@@ -96,9 +86,7 @@ func TestConfigPathMissing(t *testing.T) {
 
 func TestRunDryRun(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 	envFile := filepath.Join(tmpDir, ".env")
 
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
@@ -130,12 +118,9 @@ func TestRunDryRun(t *testing.T) {
 }
 
 func TestRunUsesConfigDefaults(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	configDir := setTestConfigHome(t)
 
-	cfgPath := filepath.Join(tmpDir, "xdg", "nv", "config.toml")
+	cfgPath := filepath.Join(configDir, "config.toml")
 	if err := os.MkdirAll(filepath.Dir(cfgPath), 0o750); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}

@@ -24,19 +24,14 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/adrg/xdg"
 )
 
 func TestEnsureConfigDir(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", tmpDir)
-	xdg.Reload()
+	dir := setTestConfigHome(t)
 
 	if err := EnsureConfigDir(); err != nil {
 		t.Fatalf("EnsureConfigDir: %v", err)
 	}
-	dir := filepath.Join(tmpDir, "nv")
 	info, err := os.Stat(dir)
 	if err != nil {
 		t.Fatalf("stat config dir: %v", err)
@@ -47,10 +42,7 @@ func TestEnsureConfigDir(t *testing.T) {
 }
 
 func TestLoadUsesDefaultsOnInvalidConfig(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 
 	path, err := GetConfigPath()
 	if err != nil {

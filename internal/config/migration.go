@@ -123,7 +123,7 @@ func PromptMigration() (bool, error) {
 	}
 
 	fmt.Fprintf(os.Stdout, "Warning: legacy global env file detected: %s\n\n", legacyPath)
-	fmt.Fprintln(os.Stdout, "nv moved to XDG paths (sigh).")
+	fmt.Fprintln(os.Stdout, "nv stores globals in the per-user config file.")
 	fmt.Fprintln(os.Stdout, "We'll stash your globals here:")
 	fmt.Fprintf(os.Stdout, "%s\n\n", configPath)
 	fmt.Fprintln(os.Stdout, "Your ~/.nv file will be:")
@@ -179,7 +179,7 @@ func BackupLegacyEnv() error {
 	defer src.Close()
 
 	backupPath := filepath.Join(configDir, "nv.backup")
-	dst, err := os.OpenFile(backupPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600) // #nosec G304 -- backup path is under the XDG config directory.
+	dst, err := os.OpenFile(backupPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600) // #nosec G304 -- backup path is under the per-user config directory.
 	if err != nil {
 		return err
 	}

@@ -21,33 +21,21 @@
 package cli
 
 import (
-	"os"
 	"path/filepath"
-	"strings"
+	"runtime"
 	"testing"
 )
 
-func TestRunExportDefault(t *testing.T) {
-	tmpDir := t.TempDir()
-	_ = setTestConfigHome(t)
+func setTestConfigHome(t *testing.T) string {
+	t.Helper()
 
-	envFile := filepath.Join(tmpDir, ".env")
-	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
-		t.Fatalf("write env file: %v", err)
+	temp := t.TempDir()
+	if runtime.GOOS == "windows" {
+		appData := filepath.Join(temp, "AppData", "Roaming")
+		t.Setenv("APPDATA", appData)
+		return filepath.Join(appData, "nv")
 	}
 
-	opts := &exportOptions{
-		envFiles: []string{envFile},
-		format:   "shell",
-	}
-
-	stdout, _ := captureOutput(t, func() {
-		if err := runExport(opts); err != nil {
-			t.Fatalf("runExport error: %v", err)
-		}
-	})
-
-	if !strings.Contains(stdout, "export FOO=\"bar\"") {
-		t.Fatalf("unexpected output: %s", stdout)
-	}
+	t.Setenv("HOME", temp)
+	return filepath.Join(temp, ".config", "nv")
 }
