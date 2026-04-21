@@ -81,7 +81,7 @@ nv run -e .env -- ./myapp
 
 ## Configuration (optional)
 
-Config lives at `$XDG_CONFIG_HOME/nv/config.toml` (defaults to `~/.config/nv` on Linux, `~/Library/Application Support/nv` on macOS). Run `nv config path` to see the exact location. If you still have a legacy `~/.nv` file from v2, `nv config migrate` will import it and back up the original alongside the config file.
+Config lives at `~/.config/nv/config.toml` on Linux and macOS, and `%APPDATA%\nv\config.toml` on Windows. Run `nv config path` to see the exact location. If you still have a legacy `~/.nv` file from v2, `nv config migrate` will import it and back up the original alongside the config file.
 
 ```sh
 nv config init    # Create config with defaults

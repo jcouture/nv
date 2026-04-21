@@ -25,8 +25,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/adrg/xdg"
 )
 
 func TestDetectLegacyEnv(t *testing.T) {
@@ -76,8 +74,7 @@ func TestParseLegacyEnvFileInvalid(t *testing.T) {
 func TestMigrateLegacyEnv(t *testing.T) {
 	temp := t.TempDir()
 	t.Setenv("HOME", temp)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(temp, "xdg"))
-	xdg.Reload()
+	configDir := filepath.Join(temp, ".config", "nv")
 
 	legacyPath := filepath.Join(temp, ".nv")
 	if err := os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600); err != nil {
@@ -96,13 +93,14 @@ func TestMigrateLegacyEnv(t *testing.T) {
 	if cfg.Globals.Env["FOO"] != "bar" {
 		t.Fatalf("FOO=%s want bar", cfg.Globals.Env["FOO"])
 	}
+	if _, err := os.Stat(filepath.Join(configDir, "nv.backup")); err != nil {
+		t.Fatalf("stat backup: %v", err)
+	}
 }
 
 func TestMigrateLegacyEnvNoLegacy(t *testing.T) {
 	temp := t.TempDir()
 	t.Setenv("HOME", temp)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(temp, "xdg"))
-	xdg.Reload()
 
 	migrated, err := MigrateLegacyEnv()
 	if err != nil {
@@ -116,8 +114,6 @@ func TestMigrateLegacyEnvNoLegacy(t *testing.T) {
 func TestMigrateNonInteractive(t *testing.T) {
 	temp := t.TempDir()
 	t.Setenv("HOME", temp)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(temp, "xdg"))
-	xdg.Reload()
 
 	legacyPath := filepath.Join(temp, ".nv")
 	if err := os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600); err != nil {
@@ -137,8 +133,6 @@ func TestMigrateNonInteractive(t *testing.T) {
 func TestBackupAndDeleteLegacyEnv(t *testing.T) {
 	temp := t.TempDir()
 	t.Setenv("HOME", temp)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(temp, "xdg"))
-	xdg.Reload()
 
 	legacyPath := filepath.Join(temp, ".nv")
 	if err := os.WriteFile(legacyPath, []byte("FOO=bar"), 0o600); err != nil {
@@ -148,7 +142,7 @@ func TestBackupAndDeleteLegacyEnv(t *testing.T) {
 	if err := BackupLegacyEnv(); err != nil {
 		t.Fatalf("BackupLegacyEnv: %v", err)
 	}
-	backupPath := filepath.Join(filepath.Join(temp, "xdg", "nv"), "nv.backup")
+	backupPath := filepath.Join(temp, ".config", "nv", "nv.backup")
 	_, err := os.Stat(backupPath)
 	if err != nil {
 		t.Fatalf("stat backup: %v", err)

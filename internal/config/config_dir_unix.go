@@ -18,36 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cli
+package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
-	"testing"
 )
 
-func TestRunExportDefault(t *testing.T) {
-	tmpDir := t.TempDir()
-	_ = setTestConfigHome(t)
-
-	envFile := filepath.Join(tmpDir, ".env")
-	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
-		t.Fatalf("write env file: %v", err)
+func platformConfigDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
 
-	opts := &exportOptions{
-		envFiles: []string{envFile},
-		format:   "shell",
-	}
-
-	stdout, _ := captureOutput(t, func() {
-		if err := runExport(opts); err != nil {
-			t.Fatalf("runExport error: %v", err)
-		}
-	})
-
-	if !strings.Contains(stdout, "export FOO=\"bar\"") {
-		t.Fatalf("unexpected output: %s", stdout)
-	}
+	return filepath.Join(home, ".config", "nv"), nil
 }

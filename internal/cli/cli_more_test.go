@@ -29,7 +29,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/adrg/xdg"
 	"github.com/fatih/color"
 	"github.com/jcouture/nv/internal/config"
 )
@@ -379,9 +378,7 @@ func TestValidateEnvironmentVerbose(t *testing.T) {
 
 func TestRunRunExitCode(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)
@@ -408,9 +405,7 @@ func TestRunRunExitCode(t *testing.T) {
 
 func TestRunRunValidateDryRun(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 	envFile := filepath.Join(tmpDir, ".env")
 	schemaFile := filepath.Join(tmpDir, ".env.example")
 
@@ -449,9 +444,7 @@ func TestRunRunValidateDryRun(t *testing.T) {
 
 func TestRunRunValidateMissingSchema(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)
@@ -476,9 +469,7 @@ func TestRunRunValidateMissingSchema(t *testing.T) {
 
 func TestRunRunRespectsSchemaFlags(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 	envFile := filepath.Join(tmpDir, ".env")
 	schemaFile := filepath.Join(tmpDir, ".env.schema")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
@@ -517,9 +508,7 @@ func TestRunRunRespectsSchemaFlags(t *testing.T) {
 
 func TestRunRunInvalidFormat(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)
@@ -544,9 +533,7 @@ func TestRunRunInvalidFormat(t *testing.T) {
 
 func TestRunRunMissingCommand(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 	envFile := filepath.Join(tmpDir, ".env")
 	if err := os.WriteFile(envFile, []byte("FOO=bar\n"), 0o644); err != nil {
 		t.Fatalf("write env file: %v", err)

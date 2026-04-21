@@ -27,35 +27,14 @@ import (
 	"runtime"
 	"sync"
 	"testing"
-
-	"github.com/adrg/xdg"
 )
 
-func TestGetConfigDirWithXDG(t *testing.T) {
-	temp := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", temp)
-	xdg.Reload()
-
+func TestGetConfigDir(t *testing.T) {
+	want := setTestConfigHome(t)
 	dir, err := GetConfigDir()
 	if err != nil {
 		t.Fatalf("GetConfigDir: %v", err)
 	}
-	if dir != filepath.Join(temp, "nv") {
-		t.Fatalf("dir=%s want %s", dir, filepath.Join(temp, "nv"))
-	}
-}
-
-func TestGetConfigDirWithoutXDG(t *testing.T) {
-	temp := t.TempDir()
-	t.Setenv("HOME", temp)
-	t.Setenv("XDG_CONFIG_HOME", "")
-	xdg.Reload()
-
-	dir, err := GetConfigDir()
-	if err != nil {
-		t.Fatalf("GetConfigDir: %v", err)
-	}
-	want := filepath.Join(xdg.ConfigHome, "nv")
 	if dir != want {
 		t.Fatalf("dir=%s want %s", dir, want)
 	}
@@ -227,9 +206,7 @@ func TestExpandHomeError(t *testing.T) {
 }
 
 func TestConfigExists(t *testing.T) {
-	temp := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", temp)
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 
 	exists, err := ConfigExists()
 	if err != nil {

@@ -27,15 +27,10 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/adrg/xdg"
 )
 
 func TestLoadConfigExistsInvalid(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 
 	path, err := GetConfigPath()
 	if err != nil {
@@ -55,10 +50,7 @@ func TestLoadConfigExistsInvalid(t *testing.T) {
 }
 
 func TestLoadConfigExistsValid(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 
 	cfg := Default()
 	cfg.General.Verbosity = 2
@@ -73,10 +65,7 @@ func TestLoadConfigExistsValid(t *testing.T) {
 }
 
 func TestLoadCreatesDefaultConfigWhenNoLegacy(t *testing.T) {
-	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
+	_ = setTestConfigHome(t)
 
 	path, err := GetConfigPath()
 	if err != nil {
@@ -98,8 +87,6 @@ func TestLoadCreatesDefaultConfigWhenNoLegacy(t *testing.T) {
 func TestLoadIgnoresInvalidLegacy(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpDir, "xdg"))
-	xdg.Reload()
 
 	legacyPath := filepath.Join(tmpDir, ".nv")
 	if err := os.WriteFile(legacyPath, []byte("INVALID"), 0o600); err != nil {
@@ -131,8 +118,7 @@ func TestConfigExistsError(t *testing.T) {
 	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
 		t.Fatalf("write bad home: %v", err)
 	}
-	t.Setenv("XDG_CONFIG_HOME", badHome)
-	xdg.Reload()
+	t.Setenv("HOME", badHome)
 
 	_, err := ConfigExists()
 	if err == nil {
@@ -146,8 +132,7 @@ func TestLoadReturnsDefaultOnError(t *testing.T) {
 	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
 		t.Fatalf("write bad home: %v", err)
 	}
-	t.Setenv("XDG_CONFIG_HOME", badHome)
-	xdg.Reload()
+	t.Setenv("HOME", badHome)
 
 	cfg := Load()
 	if cfg.General.Verbosity != Default().General.Verbosity {
@@ -155,13 +140,13 @@ func TestLoadReturnsDefaultOnError(t *testing.T) {
 	}
 }
 
-func TestLoadConfigHomeError(t *testing.T) {
+func TestLoadConfigDirError(t *testing.T) {
 	tmpDir := t.TempDir()
 	badHome := filepath.Join(tmpDir, "bad")
 	if err := os.WriteFile(badHome, []byte("file"), 0o600); err != nil {
 		t.Fatalf("write bad home: %v", err)
 	}
-	t.Setenv("XDG_CONFIG_HOME", badHome)
+	t.Setenv("HOME", badHome)
 
 	cfg := Load()
 	if cfg.General.Verbosity != Default().General.Verbosity {

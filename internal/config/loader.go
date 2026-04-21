@@ -27,11 +27,10 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/adrg/xdg"
 )
 
 func GetConfigDir() (string, error) {
-	return filepath.Join(xdg.ConfigHome, "nv"), nil
+	return platformConfigDir()
 }
 
 func GetConfigPath() (string, error) {
