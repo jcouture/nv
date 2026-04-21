@@ -1,11 +1,11 @@
 # Binaries for programs and plugins
+bin/
+dist/
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-bin/
-dist/
 
 # Test binary, built with `go test -c`
 *.test
@@ -16,7 +16,7 @@ coverage.*
 *.coverprofile
 profile.cov
 
-# Dependency directories (remove the comment below to include it)
+# Dependency directories
 # vendor/
 
 # Go workspace file

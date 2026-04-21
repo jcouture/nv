@@ -1,34 +1,30 @@
+APP ?= nv
 BIN_DIR ?= bin
-BIN_NV ?= $(BIN_DIR)/nv
+BIN ?= $(BIN_DIR)/$(APP)
+MAIN_PKG ?= ./cmd/nv
 
 GOFLAGS ?= -trimpath -buildvcs=false
-
 GOCACHE_DIR ?= $(CURDIR)/.gocache
 export GOCACHE := $(GOCACHE_DIR)
 
 # Version information
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-LDFLAGS ?= -X github.com/jcouture/nv/internal/cli.Version=$(VERSION) -X github.com/jcouture/nv/internal/cli.Commit=$(COMMIT) -X github.com/jcouture/nv/internal/build.Version=$(VERSION) -X github.com/jcouture/nv/internal/build.GitCommit=$(COMMIT)
+COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
+LDFLAGS ?= -X github.com/jcouture/nv/internal/cli.Version=$(VERSION) -X github.com/jcouture/nv/internal/cli.Commit=$(COMMIT)
 BUILD_FLAGS ?= $(strip $(if $(LDFLAGS),-ldflags "$(LDFLAGS)"))
 
 TEST_PKGS ?= ./...
 FUZZ_PKGS ?= ./...
 FUZZTIME ?= 30s
 
-.PHONY: build clean help fmt fix vet gosec vulncheck tidy precommit test install fuzz coverage
+.PHONY: build clean help fmt fix vet gosec vulncheck tidy precommit test install uninstall print-version fuzz
 
 .DEFAULT_GOAL := help
 
 ## Run unit tests
 test:
-	@go run gotest.tools/gotestsum@v1.13.0 --format=testdox -- -coverprofile=coverage.out -covermode=atomic ./...
+	@go run gotest.tools/gotestsum@v1.13.0 --format=testdox -- -coverprofile=coverage.out -covermode=atomic $(TEST_PKGS)
 	@go tool cover -func=coverage.out | grep total | awk '{print "Total coverage: " $$3}'
-
-.PHONY: coverage
-coverage: test
-	@go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report generated: coverage.html"
 
 ## Run fuzz tests
 fuzz:
@@ -43,16 +39,30 @@ fuzz:
 		done; \
 	done
 
-## Build nv binary
+## Build the binary
 build:
 	@mkdir -p $(BIN_DIR) $(GOCACHE_DIR)
-	CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN_NV) ./cmd/nv
-	@echo "Built $(BIN_NV)"
+	@CGO_ENABLED=0 go build $(GOFLAGS) $(BUILD_FLAGS) -o $(BIN) $(MAIN_PKG)
+	@echo "Built $(BIN)"
 
-## Install nv to GOPATH/bin
+## Print the computed release version
+print-version:
+	@printf '%s\n' "$(VERSION)"
+
+## Install to GOBIN
 install:
-	CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) ./cmd/nv
-	@echo "Installed nv to $$(go env GOPATH)/bin"
+	@CGO_ENABLED=0 go install $(GOFLAGS) $(BUILD_FLAGS) $(MAIN_PKG)
+	@echo "Installed $(APP) to $$(go env GOBIN)"
+
+## Uninstall from GOBIN
+uninstall:
+	@INSTALL_PATH="$$(go env GOBIN)/$(APP)"; \
+	if [ -f "$$INSTALL_PATH" ]; then \
+		rm -f "$$INSTALL_PATH"; \
+		echo "Uninstalled $(APP) from $$INSTALL_PATH"; \
+	else \
+		echo "$(APP) not found at $$INSTALL_PATH"; \
+	fi
 
 ## Format code (writes changes)
 fmt:
@@ -82,9 +92,10 @@ vulncheck:
 
 ## Tidy modules (writes go.mod/go.sum if needed)
 tidy:
+	@go get -u ./...
 	@go mod tidy -v
 
-## Local pre-commit convenience (writes fmt/tidy)
+## Pre-commit checks (writes fmt/tidy)
 precommit: fmt fix tidy vet gosec vulncheck test
 	@echo "Pre-commit checks passed"
 
@@ -92,11 +103,11 @@ precommit: fmt fix tidy vet gosec vulncheck test
 clean:
 	@echo "GOCACHE_DIR=$(GOCACHE_DIR)"
 	@rm -rf "$(BIN_DIR)" dist/ "$(GOCACHE_DIR)"
+	@if [ -d .gomodcache ]; then chmod -R u+w .gomodcache && rm -rf .gomodcache; fi
 	@go clean -cache -testcache
 	@echo "Cleaned build artifacts"
 
-## Show this help message
+## Show help
 help:
-	@echo "nv - Available targets:"
-	@echo ""
-	@awk '/^##/{help=$$0; sub(/^## */, "", help); next} /^[[:alnum:]_.-]+:/{target=$$1; sub(/:.*/, "", target); if(help){printf "  \033[36m%-18s\033[0m %s\n", target, help; help=""}}' $(MAKEFILE_LIST)
+	@printf '%s\n\n' "$(APP) - Available targets:"
+	@awk 'BEGIN { esc=sprintf("%c", 27); cyan=esc "[36m"; reset=esc "[0m" } /^##/{help=$$0; sub(/^## */, "", help); next} /^[[:alnum:]_.-]+:/{target=$$1; sub(/:.*/, "", target); if(help){printf "  %s%-18s%s %s\n", cyan, target, reset, help; help=""}}' $(MAKEFILE_LIST)
