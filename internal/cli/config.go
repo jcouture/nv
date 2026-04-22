@@ -29,8 +29,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"github.com/jcouture/nv/internal/config"
+	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )
 
@@ -135,7 +135,11 @@ func newConfigValidateCmd() *cobra.Command {
 				return err
 			}
 			cfg := config.Default()
-			if _, err := toml.DecodeFile(path, cfg); err != nil {
+			tree, err := toml.LoadFile(path)
+			if err != nil {
+				return err
+			}
+			if err := tree.Unmarshal(cfg); err != nil {
 				return err
 			}
 
