@@ -26,7 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 )
 
 func GetConfigDir() (string, error) {
@@ -185,11 +185,14 @@ func LoadWithMigration() (*Config, bool, error) {
 
 func LoadFromPath(path string) (*Config, error) {
 	cfg := Default()
-	meta, err := toml.DecodeFile(path, cfg)
+	tree, err := toml.LoadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	cfg.defined = definedFromMeta(meta)
+	if err := tree.Unmarshal(cfg); err != nil {
+		return nil, err
+	}
+	cfg.defined = definedFromTree(tree)
 	cfg.MergeWithDefaults()
 
 	if errs := cfg.Validate(); len(errs) > 0 {
@@ -276,7 +279,7 @@ func (c *Config) MergeWithDefaults() {
 	}
 }
 
-func definedFromMeta(meta toml.MetaData) map[string]bool {
+func definedFromTree(tree *toml.Tree) map[string]bool {
 	defined := make(map[string]bool)
 	keys := []struct {
 		path []string
@@ -295,7 +298,7 @@ func definedFromMeta(meta toml.MetaData) map[string]bool {
 	}
 
 	for _, item := range keys {
-		if meta.IsDefined(item.path...) {
+		if tree.HasPath(item.path) {
 			defined[item.key] = true
 		}
 	}

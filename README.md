@@ -89,6 +89,8 @@ nv config show    # View your current config
 nv config edit    # Edit config in $EDITOR
 ```
 
+Missing config fields fall back to built-in defaults. Explicit values in `config.toml`, including `false`, `0`, or empty strings, are treated as intentional settings and are not replaced.
+
 ### Globals
 
 Globals apply to every `nv` command.

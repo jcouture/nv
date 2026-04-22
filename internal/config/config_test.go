@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 )
 
 func TestConfigTOMLSerialization(t *testing.T) {
@@ -40,8 +40,7 @@ func TestConfigTOMLSerialization(t *testing.T) {
 	}
 
 	var decoded Config
-	_, err := toml.Decode(buf.String(), &decoded)
-	if err != nil {
+	if err := toml.Unmarshal(buf.Bytes(), &decoded); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if decoded.Globals.Env["AWS_REGION"] != cfg.Globals.Env["AWS_REGION"] {
