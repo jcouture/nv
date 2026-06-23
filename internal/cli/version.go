@@ -176,7 +176,7 @@ func runVersion(opts *versionOptions) error {
 
 func banner() string {
 	lines := []string{
-		"_ ____   __",
+		" _ ____   __",
 		"| '_ \\ \\ / /",
 		"| | | \\ V / ",
 		"|_| |_|\\_/",
