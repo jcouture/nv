@@ -28,6 +28,10 @@ go.work.sum
 
 # env file
 .env
+.env.local
+
+# Cosign files
+cosign.*
 
 # Editor/IDE
 # .idea/

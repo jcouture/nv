@@ -1,3 +1,5 @@
+version: 2
+
 project_name: nv
 
 before:
@@ -5,13 +7,16 @@ before:
     - go mod tidy
 
 builds:
-  - <<: &build_defaults
-      binary: nv
-      main: ./cmd/nv/
-      env:
-        - CGO_ENABLE=0
-      ldflags:
-        - -s -w -X github.com/jcouture/nv/internal/build.Version={{.Version}}
+  - &build_defaults
+    binary: nv
+    main: ./cmd/nv
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+      - -buildvcs=false
+    ldflags:
+      - -s -w -X github.com/jcouture/nv/internal/cli.Version={{ .Version }} -X github.com/jcouture/nv/internal/cli.Commit={{ .Commit }}
     id: macos
     goos: [darwin]
     goarch: [amd64, arm64]
@@ -26,16 +31,29 @@ builds:
     goos: [windows]
     goarch: [386, amd64, arm, arm64]
 
+archives:
+  - id: nv
+    ids:
+      - macos
+      - linux
+      - windows
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
 signs:
   - cmd: cosign
+    signature: "${artifact}.sigstore.json"
     stdin: "{{ .Env.COSIGN_PASSWORD }}"
     args:
       - "sign-blob"
       - "--key=env://COSIGN_PRIVATE_KEY"
-      - "--output-signature=${signature}"
+      - "--bundle=${signature}"
       - "${artifact}"
       - "--yes"
-    artifacts: all
+    artifacts: checksum
 
 checksum:
   name_template: "checksums.txt"
@@ -47,12 +65,21 @@ changelog:
       - "^docs:"
       - "^test:"
 
-brews:
-  - repository:
+homebrew_casks:
+  - name: nv
+    ids:
+      - nv
+    binaries:
+      - nv
+    repository:
       owner: jcouture
-      name: homebrew-nv
-    folder: Formula
+      name: homebrew-tap
+    directory: Casks
     homepage: https://github.com/jcouture/nv
     description: Lightweight utility to load context specific environment variables
-    test: |
-      system "#{bin}/nv"
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/nv"]
+          end
