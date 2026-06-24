@@ -7,7 +7,7 @@
 [![Release](https://img.shields.io/github/release/jcouture/nv.svg?style=for-the-badge)](https://github.com/jcouture/nv/releases/latest)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](/LICENSE.md)
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge)](http://godoc.org/github.com/jcouture/nv)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jcouture/nv?style=for-the-badge)](https://https://goreportcard.com/badge/github.com/jcouture/nv)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jcouture/nv?style=for-the-badge)](https://goreportcard.com/report/github.com/jcouture/nv)
 
 `nv` runs any command with predictable environment variables from your `.env` files. Think “one-shot dotenv runner” for scripts, deploys, and local apps.
 
@@ -32,37 +32,46 @@ nv run -e .env -- ./myapp
 ## Everyday moves
 
 - **Cascade the usual dotenv chain**: `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`
+
   ```sh
   nv run --cascade --env=production -- ./deploy.sh
   ```
+
   When you pass `-e/--env-file`, cascading turns off (with a warning) so only the files you listed are used.
 
 - **Point at specific files (multiple allowed)**
+
   ```sh
   nv run -e .env -e .env.local -- ./myapp
   ```
 
 - **Override inline for a one-off**
+
   ```sh
   nv run -e .env -o PORT=4200 -- ./myapp
   ```
 
 - **Preview without running**
+
   ```sh
   nv run -e .env --dry-run -- ./myapp
   ```
 
 - **Export for another tool**
+
   ```sh
   nv export -e .env --format=json
   ```
 
 - **Validate before you run** (defaults to `.env.example` as schema)
+
   ```sh
   nv validate -e .env
   ```
+
   Validation checks that your real `.env` has every required key and that required ones are non-empty. The schema file is just a list of keys with optional example values; it is not loaded at runtime.
   Schema example:
+
   ```
   DATABASE_URL=postgres://localhost   # example value is ignored
   OPTIONAL=                           # empty value means "can be blank or missing"
@@ -70,6 +79,7 @@ nv run -e .env -- ./myapp
   ```
 
 - **Use a custom schema file**
+
   ```sh
   nv validate -e .env --schema=.env.staging.example
   ```
@@ -89,11 +99,11 @@ nv config show    # View your current config
 nv config edit    # Edit config in $EDITOR
 ```
 
-Missing config fields fall back to built-in defaults. Explicit values in `config.toml`, including `false`, `0`, or empty strings, are treated as intentional settings and are not replaced.
+When `nv run` loads config, missing fields fall back to built-in defaults. Explicit values in `config.toml`, including `false`, `0`, or empty strings, are treated as intentional settings and are not replaced.
 
 ### Globals
 
-Globals apply to every `nv` command.
+Globals currently apply to `nv run`. `nv export` and `nv validate` currently use their own flags and built-in command defaults rather than loading `globals.env` from config.
 
 ```sh
 nv config globals list
@@ -103,14 +113,16 @@ nv config globals unset AWS_REGION
 
 ### Priority at a glance
 
-Default order (highest first):
-1. `KEY=value` prefixes on the command you run after `--`
-2. `-o/--override KEY=value`
-3. `.env.local` (when cascading)
-4. `.env`
-5. `[globals.env]`
+Default `nv run` order (highest first):
 
-Flip globals to load last if you prefer:
+1. `-o/--override KEY=value`
+2. `.env.<env>.local` (when cascading)
+3. `.env.<env>` (when cascading)
+4. `.env.local` (when cascading)
+5. `.env`
+6. `[globals.env]` when `globals.priority = "first"`
+
+Set globals to load after files if you want them to win over `.env` values:
 
 ```sh
 nv config set globals.priority "last"
@@ -128,7 +140,7 @@ nv config set globals.priority "last"
 
 - **Permission denied on config**
   ```sh
-  chmod 644 "$(nv config path)"
+  chmod 600 "$(nv config path)"
   ```
 - **Config seems corrupted**
   ```sh
@@ -142,20 +154,27 @@ nv config set globals.priority "last"
 
 ## Build from source (latest dev)
 
-1) Verify Go 1.25+
+1. Verify Go 1.26+
+
 ```sh
 go version
 ```
-2) Clone
+
+2. Clone
+
 ```sh
 git clone https://github.com/jcouture/nv.git
 cd nv
 ```
-3) Install build deps (via [mise-en-place](https://mise.jdx.dev/))
+
+3. Install build deps (via [mise-en-place](https://mise.jdx.dev/))
+
 ```sh
 mise install
 ```
-4) Build
+
+4. Build
+
 ```sh
 make build
 ```
