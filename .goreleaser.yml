@@ -54,5 +54,7 @@ brews:
     folder: Formula
     homepage: https://github.com/jcouture/nv
     description: Lightweight utility to load context specific environment variables
+    custom_block: |
+      deprecate! date: "2026-06-24", because: "has moved to jcouture/tap", replacement_formula: "jcouture/tap/nv"
     test: |
       system "#{bin}/nv"

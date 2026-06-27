@@ -33,9 +33,16 @@ The difference is that `nv` _feeds_ an explicit environment to the process it st
 
 #### Homebrew
 
-| Install                       | Upgrade           |
-| ----------------------------- | ----------------- |
-| `brew install jcouture/nv/nv` | `brew upgrade nv` |
+> **v2.x is no longer maintained.** v3.0.0 is available on a new tap.
+> To upgrade, see the [Migration Guide](#migrating-to-v3) below.
+>
+> To stay on v2, pin your current version: `brew pin nv`
+
+**Install (v2 - legacy)**
+
+```sh
+brew install jcouture/nv/nv
+```
 
 ### Linux
 
@@ -149,3 +156,24 @@ TERM=xterm-color # or any other relevant value for `TERM`
 `nv` is released under the MIT license. See [LICENSE](./LICENSE) for details.
 
 The `nv` leaf logo is based on [this icon](https://thenounproject.com/term/leaf/1904973/) by [Nick Bluth](https://thenounproject.com/nickbluth/), from the Noun Project. Used under a [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0/) license.
+
+## Migrating to v3
+
+v3.0.0 is installed from a new tap. The old tap (`jcouture/nv`) will
+not receive further updates.
+
+**To upgrade to v3:**
+
+```sh
+brew uninstall nv
+brew untap jcouture/nv    # optional but avoids stale formula confusion
+brew install jcouture/tap/nv
+```
+
+**To stay on v2:**
+
+```sh
+brew pin nv               # prevents accidental upgrades
+```
+
+> Note: v3 includes breaking changes. Review the release notes before upgrading.
