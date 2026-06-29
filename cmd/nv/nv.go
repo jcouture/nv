@@ -110,7 +110,7 @@ func printDeprecationNotice() {
 
 	fmt.Fprintln(os.Stderr, accent("*******************************************"))
 	fmt.Fprintln(os.Stderr, warning("WARNING: nv v2.x is no longer maintained."))
-	fmt.Fprintln(os.Stderr, "Upgrade to v3:", accent("brew install jcouture/tap/nv"))
-	fmt.Fprintln(os.Stderr, "Stay on v2:", accent("brew pin nv"))
+	fmt.Fprintln(os.Stderr, "Upgrade to v3:", accent("brew install --cask jcouture/tap/nv"))
+	fmt.Fprintln(os.Stderr, "Stay on v2:", accent("no action needed"))
 	fmt.Fprintln(os.Stderr, accent("*******************************************"))
 }

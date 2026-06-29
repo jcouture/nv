@@ -34,9 +34,11 @@ The difference is that `nv` _feeds_ an explicit environment to the process it st
 #### Homebrew
 
 > **v2.x is no longer maintained.** v3.0.0 is available on a new tap.
-> To upgrade, see the [Migration Guide](#migrating-to-v3) below.
+> The migration steps are included in this README under
+> [Migrating to v3](#migrating-to-v3).
 >
-> To stay on v2, pin your current version: `brew pin nv`
+> To stay on v2, no action is required. Homebrew will not automatically
+> replace the legacy v2 formula with the v3 cask from a different tap.
 
 **Install (v2 - legacy)**
 
@@ -159,21 +161,25 @@ The `nv` leaf logo is based on [this icon](https://thenounproject.com/term/leaf/
 
 ## Migrating to v3
 
-v3.0.0 is installed from a new tap. The old tap (`jcouture/nv`) will
-not receive further updates.
+This section is the complete Homebrew migration guide for moving from the
+legacy v2 formula to the v3 cask. The old tap (`jcouture/nv`) will not
+receive further updates.
 
 **To upgrade to v3:**
 
 ```sh
 brew uninstall nv
 brew untap jcouture/nv    # optional but avoids stale formula confusion
-brew install jcouture/tap/nv
+brew install --cask jcouture/tap/nv
 ```
 
 **To stay on v2:**
 
 ```sh
-brew pin nv               # prevents accidental upgrades
+# no action required
 ```
+
+If you specifically want to block any future upgrades of the legacy v2
+formula itself, you can still run `brew pin nv`.
 
 > Note: v3 includes breaking changes. Review the release notes before upgrading.
