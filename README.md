@@ -17,7 +17,7 @@
 
 - macOS (Homebrew):
   ```sh
-  brew install jcouture/nv/nv
+  brew install --cask jcouture/tap/nv
   ```
 - Linux/Windows/macOS (binary): download the latest release from https://github.com/jcouture/nv/releases
 
