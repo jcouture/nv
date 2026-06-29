@@ -41,7 +41,7 @@ var defaultValuePatterns = []*regexp.Regexp{
 	regexp.MustCompile(`\bAIza[0-9A-Za-z\-_]{35}\b`),
 	regexp.MustCompile(`\bSG\.[A-Za-z0-9_-]{20,}\b`),
 	regexp.MustCompile(`\bSK[0-9a-fA-F]{32}\b`),
-	regexp.MustCompile(`https://hooks\.slack\.com/services/[A-Za-z0-9+/]{20,}`),
+	regexp.MustCompile(`^https://hooks\.slack\.com/services/[A-Za-z0-9+/]{20,}$`),
 }
 
 func maskValue(key, value string, unredacted bool, valuePatterns []*regexp.Regexp) (string, bool) {

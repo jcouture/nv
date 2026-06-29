@@ -135,3 +135,34 @@ func TestMaskValueUnredacted(t *testing.T) {
 		t.Fatalf("expected secret value, got %q", value)
 	}
 }
+
+func TestIsSecretValueSlackWebhook(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		value  string
+		secret bool
+	}{
+		{
+			name:   "exact webhook value",
+			value:  "https://hooks.slack.com/services/T00000000/B00000000/abcdefghijklmnopqrstuvwxyz12",
+			secret: true,
+		},
+		{
+			name:   "embedded in larger string",
+			value:  "https://example.com/redirect?next=https://hooks.slack.com/services/T00000000/B00000000/abcdefghijklmnopqrstuvwxyz12",
+			secret: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := isSecretValue(tc.value, defaultValuePatterns); got != tc.secret {
+				t.Fatalf("isSecretValue(%q) = %v, want %v", tc.value, got, tc.secret)
+			}
+		})
+	}
+}
