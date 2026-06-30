@@ -168,7 +168,7 @@ receive further updates.
 **To upgrade to v3:**
 
 ```sh
-brew uninstall nv
+brew uninstall --formula nv
 brew untap jcouture/nv    # optional but avoids stale formula confusion
 brew install --cask jcouture/tap/nv
 ```

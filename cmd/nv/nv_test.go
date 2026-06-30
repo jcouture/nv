@@ -68,7 +68,7 @@ func TestPrintVersion(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "nv version 2.2.2\n\n", stdout.String())
-	assert.Equal(t, "*******************************************\nWARNING: nv v2.x is no longer maintained.\nUpgrade to v3:\n  brew uninstall nv\n  brew install --cask jcouture/tap/nv\nStay on v2: no action needed\n*******************************************\n", stderr.String())
+	assert.Equal(t, "*******************************************\nWARNING: nv v2.x is no longer maintained.\nUpgrade to v3:\n  brew uninstall --formula nv\n  brew install --cask jcouture/tap/nv\nStay on v2: no action needed\n*******************************************\n", stderr.String())
 }
 
 func TestPrintDeprecationNoticeDisabled(t *testing.T) {
