@@ -41,6 +41,20 @@ nv run -e .env -- ./myapp
 
 `nv` loads the file(s) you point at and starts your command with those variables. Nothing is left running after the command exits.
 
+## Migrating from v2
+
+The old tap (`jcouture/nv`) will not receive further updates. To upgrade:
+
+```sh
+brew uninstall --formula nv
+brew untap jcouture/nv    # optional, avoids stale formula confusion
+brew install --cask jcouture/tap/nv
+```
+
+If you want to stay on v2, no action is required. To block any future upgrades of the legacy formula, run `brew pin nv`.
+
+> v3 includes breaking changes. Review the [release notes](https://github.com/jcouture/nv/releases) before upgrading.
+
 ## Everyday moves
 
 - **Cascade the usual dotenv chain**: `.env`, `.env.local`, `.env.<env>`, `.env.<env>.local`
