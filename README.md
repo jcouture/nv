@@ -19,7 +19,19 @@
   ```sh
   brew install --cask jcouture/tap/nv
   ```
+  You may see a trust warning about `jcouture/nv` during install — this is a Homebrew alias and can be ignored; the cask itself is trusted. To silence future warnings, trust the tap explicitly:
+  ```sh
+  brew trust jcouture/tap
+  ```
 - Linux/Windows/macOS (binary): download the latest release from https://github.com/jcouture/nv/releases
+
+  To verify the release signature:
+  ```sh
+  cosign verify-blob \
+    --key https://raw.githubusercontent.com/jcouture/nv/main/cosign.pub \
+    --bundle checksums.txt.sigstore.json \
+    checksums.txt
+  ```
 
 **Run a command with env vars**
 
