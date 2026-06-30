@@ -191,8 +191,7 @@ func banner() string {
 		color.FgHiYellow,
 	}
 
-	colored := make([]string, 0, len(lines)+2)
-	colored = append(colored, color.New(color.FgHiWhite).Sprint("❯ nv version"))
+	colored := make([]string, 0, len(lines)+1)
 	for i, line := range lines {
 		c := color.New(palette[i%len(palette)])
 		colored = append(colored, c.Sprint(line))
