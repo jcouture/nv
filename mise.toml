@@ -1,6 +1,7 @@
 [tools]
 cosign = "3.1.1"
 "github:caarlos0/pinata" = "0.3.4"
-go = "1.26.4"
+go = "1.26.5"
 goreleaser = "2.16.0"
 osv-scanner = "2.4.0"
+zizmor = "1.27.0"
