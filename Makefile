@@ -17,7 +17,7 @@ TEST_PKGS ?= ./...
 FUZZ_PKGS ?= ./...
 FUZZTIME ?= 30s
 
-.PHONY: build clean help fmt fix vet gosec vulncheck tidy precommit test install uninstall print-version fuzz
+.PHONY: build clean help fmt fix vet gosec vulncheck zizmor actup tidy update-deps update-go-deps update-actions precommit test install uninstall print-version fuzz
 
 .DEFAULT_GOAL := help
 
@@ -90,13 +90,35 @@ vulncheck:
 	@go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
 	@echo "Vulnerability scan passed"
 
+## Audit GitHub Actions security (zizmor)
+zizmor:
+	@zizmor .
+	@echo "GitHub Actions security audit passed"
+
+## Check for outdated GitHub Actions (actup)
+actup:
+	@actup .github/workflows --check
+	@echo "GitHub Actions are current"
+
 ## Tidy modules (writes go.mod/go.sum if needed)
 tidy:
+	@go mod tidy -v
+
+## Update all dependencies (Go modules and GitHub Actions)
+update-deps: update-go-deps update-actions
+	@echo "Dependencies updated"
+
+## Update Go module dependencies
+update-go-deps:
 	@go get -u ./...
 	@go mod tidy -v
 
+## Pin GitHub Actions to immutable commit SHAs
+update-actions:
+	@actup .github/workflows
+
 ## Pre-commit checks (writes fmt/tidy)
-precommit: fmt fix tidy vet gosec vulncheck test
+precommit: fmt fix tidy vet gosec vulncheck zizmor actup test
 	@echo "Pre-commit checks passed"
 
 ## Clean build artifacts

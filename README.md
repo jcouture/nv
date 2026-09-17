@@ -180,7 +180,7 @@ nv config set globals.priority "last"
 
 ## Build from source (latest dev)
 
-1. Verify Go 1.26+
+1. Verify Go 1.26.8
 
 ```sh
 go version
