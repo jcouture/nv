@@ -1,0 +1,5 @@
+min-release-age = "24h"
+
+[allow]
+"actions/*" = "^7"
+"github/codeql-action" = "^4"
