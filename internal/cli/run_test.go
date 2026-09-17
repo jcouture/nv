@@ -22,12 +22,15 @@ package cli
 
 import (
 	"bytes"
-	"github.com/fatih/color"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 func TestParseOverride(t *testing.T) {
@@ -41,6 +44,61 @@ func TestParseOverride(t *testing.T) {
 
 	if _, _, err := parseOverride("NOVAL"); err == nil {
 		t.Fatal("expected error for missing '='")
+	}
+}
+
+func TestRunOverrideFlagPreservesCommas(t *testing.T) {
+	tests := []struct {
+		name string
+		cmd  func() *cobra.Command
+	}{
+		{name: "run", cmd: newRunCmd},
+		{name: "export", cmd: newExportCmd},
+		{name: "validate", cmd: newValidateCmd},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := tt.cmd()
+			flagSet := cmd.Flags()
+			if err := flagSet.Parse([]string{
+				"-o", "MOCK_API=investors,users,allocations,definitions",
+				"-o", "OTHER=one,two",
+			}); err != nil {
+				t.Fatalf("parse flags: %v", err)
+			}
+
+			values, err := flagSet.GetStringArray("override")
+			if err != nil {
+				t.Fatalf("get overrides: %v", err)
+			}
+			want := []string{
+				"MOCK_API=investors,users,allocations,definitions",
+				"OTHER=one,two",
+			}
+			if !reflect.DeepEqual(values, want) {
+				t.Fatalf("got overrides %#v, want %#v", values, want)
+			}
+		})
+	}
+}
+
+func TestLoadEnvironmentOverridePreservesCommaValue(t *testing.T) {
+	env, err := loadEnvironment(envOptions{
+		envFiles: []string{},
+		overrides: []string{
+			"MOCK_API=investors,users,allocations,definitions",
+			"URL=https://example.test?a=1,b=2",
+		},
+	})
+	if err != nil {
+		t.Fatalf("load environment: %v", err)
+	}
+
+	if got := env["MOCK_API"]; got != "investors,users,allocations,definitions" {
+		t.Fatalf("MOCK_API=%q", got)
+	}
+	if got := env["URL"]; got != "https://example.test?a=1,b=2" {
+		t.Fatalf("URL=%q", got)
 	}
 }
 

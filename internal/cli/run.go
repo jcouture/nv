@@ -67,7 +67,7 @@ func newRunCmd() *cobra.Command {
 	flags.StringSliceVarP(&opts.envFiles, "env-file", "e", []string{defaultEnvFile}, "Environment file(s) to load")
 	flags.BoolVarP(&opts.cascade, "cascade", "c", false, "Enable cascading mode")
 	flags.StringVar(&opts.env, "env", "", "Environment name for cascading")
-	flags.StringSliceVarP(&opts.overrides, "override", "o", nil, "Inline overrides (KEY=value)")
+	flags.StringArrayVarP(&opts.overrides, "override", "o", nil, "Inline overrides (KEY=value)")
 	flags.BoolVar(&opts.strict, "strict", false, "Fail on unresolved interpolation")
 	flags.StringSliceVarP(&opts.preserve, "preserve", "p", []string{"PATH", "HOME", "USER"}, "System variables to preserve")
 	flags.BoolVar(&opts.dryRun, "dry-run", false, "Print environment without executing")
