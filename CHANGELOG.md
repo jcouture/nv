@@ -4,6 +4,14 @@ All notable changes to nv are documented here.
 
 ---
 
+## v3.0.1 - 2026-09-23
+
+### Bug Fixes
+
+- **Override values containing commas**: preserved commas in `--override`/`-o` values for the `run`, `export`, and `validate` commands.
+
+---
+
 ## v3.0.0 - 2026-06-24
 
 ### Breaking Changes
