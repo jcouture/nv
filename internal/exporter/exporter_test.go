@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -183,7 +184,7 @@ func TestEscapeShellValue(t *testing.T) {
 		{
 			name:  "quotes and newline",
 			input: "hello \"world\"\nnext",
-			want:  "hello \\\"world\\\"\\nnext",
+			want:  "hello \\\"world\\\"\nnext",
 		},
 		{
 			name:  "backslash and dollar",
@@ -193,12 +194,12 @@ func TestEscapeShellValue(t *testing.T) {
 		{
 			name:  "backtick and tab",
 			input: "foo`\tbar",
-			want:  "foo\\`\\tbar",
+			want:  "foo\\`\tbar",
 		},
 		{
 			name:  "carriage return",
 			input: "line\rend",
-			want:  "line\\rend",
+			want:  "line\rend",
 		},
 	}
 
@@ -207,6 +208,54 @@ func TestEscapeShellValue(t *testing.T) {
 			got := escapeShellValue(tc.input)
 			if got != tc.want {
 				t.Fatalf("escapeShellValue = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestWriteShellRoundTrip(t *testing.T) {
+	shell, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skipf("sh is unavailable: %v", err)
+	}
+
+	tests := []struct {
+		name  string
+		value string
+	}{
+		{name: "newline", value: "first\nsecond"},
+		{name: "trailing newline", value: "first\n"},
+		{name: "carriage return", value: "first\rsecond"},
+		{name: "tab", value: "first\tsecond"},
+		{name: "whitespace", value: " \n\r\t "},
+		{name: "literal escapes", value: `first\n\r\tsecond`},
+		{name: "shell metacharacters", value: "\"$NV_EXPORTER_SOURCE\" `printf changed` \\"},
+		{name: "mixed", value: "\"$NV_EXPORTER_SOURCE\"\n`printf changed`\r\\\tend"},
+		{name: "unicode", value: "café\n日本語"},
+		{name: "empty", value: ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			err := Write(&buf, map[string]string{"NV_EXPORTER_VALUE": tc.value}, Options{
+				Format:     FormatShell,
+				Unredacted: true,
+			})
+			if err != nil {
+				t.Fatalf("write shell: %v", err)
+			}
+			buf.WriteString(`printf '%s' "$NV_EXPORTER_VALUE"`)
+
+			cmd := exec.Command(shell)
+			cmd.Env = []string{"NV_EXPORTER_SOURCE=expanded"}
+			cmd.Stdin = &buf
+			got, err := cmd.Output()
+			if err != nil {
+				t.Fatalf("load shell exports: %v", err)
+			}
+			if string(got) != tc.value {
+				t.Fatalf("loaded value = %q, want %q", got, tc.value)
 			}
 		})
 	}

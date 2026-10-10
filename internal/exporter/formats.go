@@ -77,12 +77,6 @@ func escapeShellValue(value string) string {
 			builder.WriteString(`\$`)
 		case '`':
 			builder.WriteString("\\`")
-		case '\n':
-			builder.WriteString(`\n`)
-		case '\r':
-			builder.WriteString(`\r`)
-		case '\t':
-			builder.WriteString(`\t`)
 		default:
 			builder.WriteRune(r)
 		}
