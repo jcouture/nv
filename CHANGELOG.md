@@ -4,6 +4,14 @@ All notable changes to nv are documented here.
 
 ---
 
+## v3.0.2 - 2026-10-15
+
+### Bug Fixes
+
+- **Shell export control characters**: preserved newlines, carriage returns, and tabs in exported values when loaded by a shell.
+
+---
+
 ## v3.0.1 - 2026-09-23
 
 ### Bug Fixes
